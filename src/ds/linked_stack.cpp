@@ -1,6 +1,6 @@
 /*
  * $File: linked_stack.cpp
- * $Date: Mon Oct 20 09:25:04 2014 +0800
+ * $Date: Mon Oct 20 23:12:58 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -29,6 +29,10 @@ LinkedStackImpl::LinkedStackImpl(size_t elem_size, PageIO &page_io,
     usql_assert(elem_size * 2 + sizeof(PageHeader) <= page_io.page_size());
 }
 
+size_t LinkedStackImpl::header_size() {
+    return sizeof(PageHeader);
+}
+
 void* LinkedStackImpl::prepare_push() {
     if (!m_root.valid() ||
             m_root.read<PageHeader>()->used_size +
@@ -52,7 +56,7 @@ const void* LinkedStackImpl::prepare_pop() {
 void LinkedStackImpl::finish_pop() {
     m_root.write_finish();
     auto hdr = m_root.read<PageHeader>();
-    if (!hdr->used_size && (m_dealloc_last || hdr->next_page))
+    if (!hdr->used_size)
         dealloc_root();
 }
 

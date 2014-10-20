@@ -1,6 +1,6 @@
 /*
  * $File: page_io.cpp
- * $Date: Mon Oct 20 09:26:01 2014 +0800
+ * $Date: Mon Oct 20 23:12:18 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -12,6 +12,7 @@ PageIO::PageIO(FileIO &&fio):
 {
     auto root_updator = [this](const Page &new_root) {
         m_fio.update_meta_start().page_freelist_root = new_root.id();
+        m_fio.update_meta_finish();
     };
     m_freelist = std::make_unique<LinkedStack<page_id_t>>(
             *this, lookup(m_fio.get_meta().page_freelist_root),

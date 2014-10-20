@@ -1,6 +1,6 @@
 /*
  * $File: page_io_env.h
- * $Date: Mon Oct 20 09:34:25 2014 +0800
+ * $Date: Mon Oct 20 22:35:22 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -20,6 +20,7 @@ class PageIOTestEnv: public ::testing::Test {
         void SetUp() override {
             m_db_fname = ssprintf("data/dbtest-%d.usql",
                     __sync_fetch_and_add(&cnt, 1));
+            unlink(m_db_fname.c_str());
             m_page_io = std::make_unique<PageIO>(
                     FileIO{m_db_fname.c_str()});
         }

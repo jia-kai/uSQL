@@ -1,6 +1,6 @@
 /*
  * $File: page_io.h
- * $Date: Mon Oct 20 09:23:11 2014 +0800
+ * $Date: Mon Oct 20 22:32:12 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -25,6 +25,10 @@ class PageIO {
         Page alloc();
         inline Page lookup(page_id_t id);
         void free(Page &&page);
+
+        FileIO& file_io() {
+            return m_fio;
+        }
 
     private:
         FileIO m_fio;

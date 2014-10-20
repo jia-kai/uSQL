@@ -1,6 +1,6 @@
 /*
  * $File: linked_stack.h
- * $Date: Mon Oct 20 09:25:44 2014 +0800
+ * $Date: Mon Oct 20 23:12:43 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -22,13 +22,7 @@ class LinkedStackImpl {
 
         bool empty() const;
 
-        /*!
-         * whether the last page should be deallocated if the whole linked
-         * stack is empty
-         */
-        void set_dealloc_last(bool flag) {
-            m_dealloc_last = flag;
-        }
+        static size_t header_size();
 
     protected:
         size_t m_elem_size;
@@ -43,7 +37,6 @@ class LinkedStackImpl {
         void finish_pop();
 
     private:
-        bool m_dealloc_last = true;
         PageIO &m_page_io;
         PageIO::Page m_root;
         root_updator_t m_root_updator;

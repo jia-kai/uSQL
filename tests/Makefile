@@ -1,5 +1,5 @@
 # $File: Makefile
-# $Date: Mon Oct 20 09:30:15 2014 +0800
+# $Date: Mon Oct 20 23:27:59 2014 +0800
 # $Author: jiakai <jia.kai66@gmail.com>
 
 BUILD_DIR = build
@@ -44,7 +44,7 @@ clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET) $(ARGS)
+	./$(TARGET) $(ARGS) 2>data/test_log
 
 gdb: 
 	OPTFLAG=-O0 make -j4
