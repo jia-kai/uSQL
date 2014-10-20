@@ -1,0 +1,91 @@
+/*
+ * $File: file_io.cpp.linux
+ * $Date: Mon Oct 20 08:38:43 2014 +0800
+ * $Author: jiakai <jia.kai66@gmail.com>
+ */
+
+#include "./file_io.h.linux"
+#include "../dbmeta.h"
+
+#include <type_traits>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+
+
+FileIO::FileIO(const char *path, size_t default_page_size) {
+    if (access(path, R_OK | W_OK)) {
+        usql_assert(default_page_size >= sizeof(DBMeta));
+        usql_log("create new database: %s; page_size=%zd",
+                path, default_page_size);
+        DBMeta meta;
+        meta.init(default_page_size);
+        FILE *fout = fopen(path, "wb");
+        usql_assert(fout, "failed to open %s: %m", path);
+        fwrite(&meta, sizeof(meta), 1, fout);
+        ftruncate(fileno(fout), default_page_size);
+        fclose(fout);
+    }
+
+    m_fd = open(path, O_APPEND | O_CREAT | O_RDWR, 0644);
+    usql_assert(m_fd != -1, "failed to open %s: %m", path);
+    struct stat stat;
+    fstat(m_fd, &stat);
+    size_t fsize = stat.st_size;
+    usql_assert(fsize >= sizeof(DBMeta));
+    m_map_addr = mmap(NULL, fsize, PROT_READ | PROT_WRITE,
+            MAP_PRIVATE, m_fd, 0);
+    usql_assert(m_map_addr != MAP_FAILED, "failed to map: %m");
+    m_meta = *static_cast<DBMeta*>(m_map_addr);
+    usql_assert(m_meta.check_magic());
+    usql_assert(fsize == m_meta.nr_page * m_meta.page_size);
+    usql_log("open database %s: page_size=%zd nr_page=%zd fd=%d",
+            path, m_meta.page_size, m_meta.nr_page, m_fd);
+}
+
+void FileIO::operator = (FileIO &&rhs) {
+    static_assert(std::is_standard_layout<FileIO>::value, "bad impl");
+    memcpy(this, &rhs, sizeof(FileIO));
+    memset(&rhs, 0, sizeof(FileIO));
+}
+
+FileIO::~FileIO() {
+    if (!m_map_addr)
+        return;
+    usql_log("close database fd=%d", m_fd);
+    sync_meta();
+    size_t length = m_meta.nr_page * m_meta.page_size;
+    auto v = msync(m_map_addr, length, MS_SYNC);
+    usql_assert(!v, "failed to msync: %m");
+    v = munmap(m_map_addr, length);
+    usql_assert(!v, "failed to unmap: %m");
+    v = close(m_fd);
+    usql_assert(!v, "failed to close: %m");
+}
+
+void FileIO::sync_meta() {
+    if (m_meta_modified) {
+        m_meta_modified = false;
+        *static_cast<DBMeta*>(m_map_addr) = m_meta;
+    }
+}
+
+void FileIO::extend_size(size_t tgt_nr_page) {
+    usql_assert(m_map_addr);
+    usql_assert(tgt_nr_page > m_meta.nr_page);
+    size_t old_len = m_meta.nr_page * m_meta.page_size,
+           new_len = tgt_nr_page * m_meta.page_size;
+    update_meta_start().nr_page = tgt_nr_page;
+    update_meta_finish();
+    sync_meta();
+    ftruncate(m_fd, new_len);
+    m_map_addr = mremap(m_map_addr, old_len, new_len, MREMAP_MAYMOVE);
+    usql_assert(m_map_addr != MAP_FAILED, "failed to remap: %m");
+}
+
+// vim: ft=cpp syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
+
+
