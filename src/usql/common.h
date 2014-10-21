@@ -1,6 +1,6 @@
 /*
  * $File: common.h
- * $Date: Sun Oct 19 15:04:54 2014 +0800
+ * $Date: Tue Oct 21 09:51:23 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstdarg>
+
+namespace usql {
 
 #define likely(v)   __builtin_expect(bool(v), 1)
 #define unlikely(v)   __builtin_expect(bool(v), 0)
@@ -47,6 +49,8 @@ void __usql_assert_fail__(
 void __usql_log__(const char *file, const char *func, int line,
 		const char *fmt, ...)
     __attribute__((format(printf, 4, 5)));
+
+}   // namespace usql
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

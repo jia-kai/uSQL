@@ -1,6 +1,6 @@
 /*
  * $File: test_page_io.cpp
- * $Date: Mon Oct 20 23:18:21 2014 +0800
+ * $Date: Mon Oct 20 23:35:49 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -37,8 +37,10 @@ TEST_F(PageIOTestEnv, test_dealloc_reuse_many) {
 
         EXPECT_EQ(nr_page, used_id.size());
 
-        for (auto &&i: pages)
+        for (auto &&i: pages) {
             m_page_io->free(std::move(i));
+            EXPECT_FALSE(i.valid());
+        }
     }
     EXPECT_LE(m_page_io->file_io().get_meta().nr_page_allocated, max_alloc);
 }

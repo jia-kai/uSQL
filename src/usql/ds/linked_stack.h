@@ -1,6 +1,6 @@
 /*
  * $File: linked_stack.h
- * $Date: Mon Oct 20 23:12:43 2014 +0800
+ * $Date: Tue Oct 21 09:52:12 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -9,6 +9,8 @@
 #include "../page_io.h"
 #include <functional>
 #include <type_traits>
+
+namespace usql {
 
 /*!
  * stack implemented by linked list, stored in pages
@@ -85,6 +87,8 @@ class LinkedStack: public LinkedStackImpl {
             return ret;
         }
 };
+
+}   // namespace usql
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

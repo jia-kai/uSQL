@@ -1,12 +1,14 @@
 /*
  * $File: dbmeta.h
- * $Date: Mon Oct 20 08:33:51 2014 +0800
+ * $Date: Tue Oct 21 09:52:39 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #pragma once
 
 #include <cstring>
+
+namespace usql {
 
 struct DBMeta {
     static constexpr size_t MAGIC_LEN = 16;
@@ -25,6 +27,8 @@ struct DBMeta {
 
     void init(size_t page_size);
 };
+
+}   // namespace usql
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

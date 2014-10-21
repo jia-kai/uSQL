@@ -1,12 +1,15 @@
 /*
  * $File: page_io.h
- * $Date: Mon Oct 20 22:32:12 2014 +0800
+ * $Date: Tue Oct 21 09:52:30 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #pragma once
 
 #include "os/file_io.h"
+
+namespace usql {
+
 template<typename T>
 class LinkedStack;
 
@@ -79,6 +82,8 @@ class PageIO::Page {
 PageIO::Page PageIO::lookup(page_id_t id) {
     return {id, m_fio.get_page(id)};
 }
+
+}   // namespace usql
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

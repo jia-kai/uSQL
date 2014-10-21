@@ -1,12 +1,14 @@
 /*
  * $File: page_io_env.h
- * $Date: Mon Oct 20 22:35:22 2014 +0800
+ * $Date: Tue Oct 21 09:54:26 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #pragma once
 
 #include "usql/page_io.h"
+
+using namespace usql;
 
 #include <gtest/gtest.h>
 #include <unistd.h>

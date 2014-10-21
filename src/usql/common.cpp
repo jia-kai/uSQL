@@ -1,6 +1,6 @@
 /*
  * $File: common.cpp
- * $Date: Mon Oct 20 09:27:11 2014 +0800
+ * $Date: Tue Oct 21 09:53:32 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -11,7 +11,7 @@
 
 #include <unistd.h>
 
-void __usql_log__(const char *file, const char *func, int line,
+void usql::__usql_log__(const char *file, const char *func, int line,
 		const char *fmt, ...) {
 #define TIME_FMT	"[%s %s@%s:%d]"
 	static std::mutex mtx;
@@ -43,7 +43,7 @@ void __usql_log__(const char *file, const char *func, int line,
 }
 
 
-void __usql_assert_fail__(
+void usql::__usql_assert_fail__(
         const char *file, int line, const char *func,
         const char *expr, const char *msg_fmt, ...) {
     std::string msg;
@@ -60,7 +60,7 @@ void __usql_assert_fail__(
     __builtin_trap();
 }
 
-std::string svsprintf(const char *fmt, va_list ap_orig) {
+std::string usql::svsprintf(const char *fmt, va_list ap_orig) {
 	int size = 100;     /* Guess we need no more than 100 bytes */
 	char *p;
 
@@ -97,7 +97,7 @@ err:
     __builtin_trap();
 }
 
-std::string ssprintf(const char *fmt, ...) {
+std::string usql::ssprintf(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	auto rst = svsprintf(fmt, ap);

@@ -1,11 +1,13 @@
 /*
  * $File: page_io.cpp
- * $Date: Mon Oct 20 23:12:18 2014 +0800
+ * $Date: Tue Oct 21 09:53:12 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "page_io.h"
 #include "ds/linked_stack.h"
+
+using namespace usql;
 
 PageIO::PageIO(FileIO &&fio):
     m_fio(std::move(fio))

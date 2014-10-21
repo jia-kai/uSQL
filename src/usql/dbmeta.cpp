@@ -1,10 +1,12 @@
 /*
  * $File: dbmeta.cpp
- * $Date: Mon Oct 20 08:34:44 2014 +0800
+ * $Date: Tue Oct 21 09:53:06 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "./dbmeta.h"
+
+using namespace usql;
 
 static const char MAGIC[DBMeta::MAGIC_LEN] = "uSQL db format0";
 

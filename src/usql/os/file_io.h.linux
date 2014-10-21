@@ -1,11 +1,13 @@
 /*
  * $File: file_io.h.linux
- * $Date: Mon Oct 20 08:38:27 2014 +0800
+ * $Date: Tue Oct 21 09:54:53 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "../common.h"
 #include "../dbmeta.h"
+
+namespace usql {
 
 class FileIO {
     bool m_meta_modified = false;
@@ -90,6 +92,8 @@ FileIO::Page FileIO::get_page(size_t pg_idx) {
             "page index %zd exceeds limit(%zd)", pg_idx, m_meta.nr_page);
     return Page{static_cast<uint8_t*>(m_map_addr) + pg_idx * m_meta.page_size};
 }
+
+}   // namespace usql
 
 // vim: ft=cpp syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

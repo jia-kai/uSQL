@@ -1,10 +1,12 @@
 /*
  * $File: linked_stack.cpp
- * $Date: Mon Oct 20 23:12:58 2014 +0800
+ * $Date: Tue Oct 21 09:52:58 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "./linked_stack.h"
+
+using namespace usql;
 
 struct LinkedStackImpl::PageHeader {
     //! page for earlier items; 0 for the first page

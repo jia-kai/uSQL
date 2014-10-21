@@ -1,6 +1,6 @@
 /*
  * $File: file_io.cpp.linux
- * $Date: Mon Oct 20 08:38:43 2014 +0800
+ * $Date: Tue Oct 21 09:55:07 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -15,6 +15,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
+using namespace usql;
 
 FileIO::FileIO(const char *path, size_t default_page_size) {
     if (access(path, R_OK | W_OK)) {
