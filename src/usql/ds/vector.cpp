@@ -1,6 +1,6 @@
 /*
  * $File: vector.cpp
- * $Date: Thu Oct 23 21:48:55 2014 +0800
+ * $Date: Fri Oct 24 00:09:29 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -15,55 +15,24 @@ using namespace usql;
  */
 
 
-enum class VectorImpl::PageType {
-    ROOT, INTERNAL, LEAF,
-
-    // used when the tree contains only one node, so root also stores data
-    ROOT_AS_LEAF    
-};
-
 struct VectorImpl::PageHeader {
-    PageType type;
-
     //! number of bytes used in this page, not including the header
     size_t used_size;
 
-    struct RootPageHeader {
-        PageIO::page_id_t freelist_root;
-        
-        //! total number of data elements in each child
-        size_t child_nr_data_elem;
-    };
+    PageIO::page_id_t
+        freelist_root,  //! valid for root page
+        parent;         //! valid for other pages
 
-    struct InternalPageHeader {
-        PageIO::page_id_t parent;
+    //! total number of data elements in each child; 0 for leaf nodes
+    size_t child_nr_data_elem;
 
-        //! total number of data elements in each child
-        size_t child_nr_data_elem;
-
-        //! offset of the first data element
-        size_t data_offset;
-    };
-
-    struct LeafPageHeader {
-        PageIO::page_id_t parent;
-
-        //! offset of the first data element
-        size_t data_offset;
-    };
-
-    union {
-        RootPageHeader root;
-        InternalPageHeader internal;
-        LeafPageHeader leaf;
-    } header;
+    //! offset of the first data element in the whole vector
+    size_t data_offset;
 
     char _payload[0];
 
-    void init_as_leaf_root() {
-        type = PageType::ROOT_AS_LEAF;
-        used_size = 0;
-        header.root.freelist_root = 0;
+    void init_zero() {
+        memset(this, 0, sizeof(PageHeader));
     }
 
     void* payload(size_t offset) {
@@ -82,6 +51,14 @@ struct VectorImpl::PageHeader {
         return static_cast<const PageIO::page_id_t*>(payload(offset));
     }
 
+    bool is_leaf() const {
+        return !child_nr_data_elem;
+    }
+
+    bool is_root() const {
+        return !parent;
+    }
+
 } __attribute__((aligned(8)));
 
 
@@ -93,25 +70,26 @@ VectorImpl::VectorImpl(size_t elem_size, PageIO &page_io):
     m_nonleaf_nr_child(m_page_payload_max / sizeof(PageIO::page_id_t))
 {
     static_assert(std::is_standard_layout<PageHeader>::value, "bad");
+    static_assert(header_size() == sizeof(PageHeader), "outdated header_size");
     usql_assert(m_elem_size * 4 + sizeof(PageHeader) <= page_io.page_size());
     usql_assert(m_page_payload_max % sizeof(PageIO::page_id_t) == 0);
 }
 
 void VectorImpl::load(PageIO::page_id_t root, root_updator_t root_updator) {
+    m_init_done = true;
     // alloc a new root or load from existing one
     if (!root) {
         root = m_page_io.alloc().id();
         PagedDataStructureBase::load(root, root_updator);
         root_updator(m_root);
-        m_root.write<PageHeader>()->init_as_leaf_root();
+        m_root.write<PageHeader>()->init_zero();
     } else {
         PagedDataStructureBase::load(root, root_updator);
     }
 
-    m_freelist.load(m_root.read<PageHeader>()->header.root.freelist_root,
+    m_freelist.load(m_root.read<PageHeader>()->freelist_root,
         [this](const PageIO::Page &new_root) {
-            m_root.write<PageHeader>()->header.root.freelist_root =
-                new_root.id();
+            m_root.write<PageHeader>()->freelist_root = new_root.id();
     });
 
     // find last page
@@ -119,56 +97,93 @@ void VectorImpl::load(PageIO::page_id_t root, root_updator_t root_updator) {
     auto lastch_offset = m_page_payload_max - sizeof(PageIO::page_id_t);
     for (; ; ) {
         auto hdr = m_last_page.read<PageHeader>();
-        if (hdr->type == PageType::ROOT_AS_LEAF || hdr->type == PageType::LEAF)
+        if (hdr->is_leaf())
             break;
         usql_assert(hdr->used_size == m_page_payload_max);
         m_last_page = m_page_io.lookup(*hdr->child_page_id(lastch_offset));
     }
 }
 
-void VectorImpl::sanity_check() {
-    usql_assert(0);
+void VectorImpl::check_init() {
+    usql_assert(m_init_done);
+}
+
+size_t VectorImpl::do_sanity_check(
+        const PageIO::Page &root,
+        PageIO::page_id_t expected_par,
+        size_t depth, bool should_full,
+        size_t expected_data_offset) {
+
+    auto hdr = root.read<PageHeader>();
+    if (!hdr->is_root())
+        usql_assert(!hdr->freelist_root);
+    usql_assert(hdr->data_offset == expected_data_offset);
+    usql_assert(hdr->parent == expected_par);
+    if (hdr->is_leaf()) {
+        usql_assert(!hdr->child_nr_data_elem);
+        usql_assert(hdr->used_size <= m_page_payload_max &&
+                hdr->used_size % m_elem_size == 0);
+        if (should_full)
+            usql_assert(hdr->used_size + m_elem_size > m_page_payload_max);
+        else
+            usql_assert(root.id() == m_last_page.id());
+        return depth + 1;
+    }
+    if (should_full)
+        usql_assert(hdr->used_size == m_page_payload_max);
+    size_t height = 0;
+    constexpr size_t d = sizeof(PageIO::page_id_t);
+    usql_assert(hdr->used_size % d == 0);
+    for (size_t choff = 0, t = hdr->used_size; choff < t; choff += d) {
+        auto cur_height = do_sanity_check(
+                m_page_io.lookup(*hdr->child_page_id(choff)),
+                root.id(),
+                depth + 1, should_full || (choff + d < t),
+                expected_data_offset);
+        expected_data_offset += hdr->child_nr_data_elem;
+        if (!height)
+            height = cur_height;
+        else {
+            usql_assert(height == cur_height,
+                    "child height differs: %zd %zd",
+                    height, cur_height);
+        }
+    }
+    return height;
+}
+
+size_t VectorImpl::sanity_check_get_height() {
+    return do_sanity_check(m_root, 0, 0, false, 0);
 }
 
 void VectorImpl::expand() {
-    auto old_hdr = m_last_page.read<PageHeader>();
     std::vector<PageIO::Page> leaf_chain{m_page_io.alloc()};
-    if (old_hdr->type == PageType::ROOT_AS_LEAF) {
+    auto old_hdr = m_last_page.read<PageHeader>();
+    if (old_hdr->is_root()) {
         usql_assert(m_last_page.id() == m_root.id());
         expand_add_root(m_leaf_nr_data_slot, 1);
         return;
     }
-    usql_assert(old_hdr->type == PageType::LEAF);
-    PageIO::Page par = m_page_io.lookup(old_hdr->header.leaf.parent);
+    PageIO::Page par = m_page_io.lookup(old_hdr->parent);
     const PageHeader* par_hdr;
     size_t leaf_chain_length = 1;
     while ((par_hdr = par.read<PageHeader>())->used_size
             == m_page_payload_max) {
         leaf_chain_length ++;
-        if (par_hdr->type == PageType::ROOT) {
-            expand_add_root(par_hdr->header.root.child_nr_data_elem *
-                    m_nonleaf_nr_child, leaf_chain_length);
+        if (par_hdr->is_root()) {
+            auto data_offset = par_hdr->child_nr_data_elem * m_nonleaf_nr_child;
+            expand_add_root(data_offset, leaf_chain_length);
             return;
         }
-        usql_assert(par_hdr->type == PageType::INTERNAL);
-        par = m_page_io.lookup(par_hdr->header.internal.parent);
+        par = m_page_io.lookup(par_hdr->parent);
     }
-    {
-        size_t child_nr_data_elem;
-        if (par_hdr->type == PageType::ROOT)
-            child_nr_data_elem = par_hdr->header.root.child_nr_data_elem;
-        else {
-            child_nr_data_elem = par_hdr->header.internal.child_nr_data_elem;
-            usql_assert(par_hdr->type == PageType::INTERNAL);
-        }
-        auto leaf_id = set_leaf_chain(
-                par.id(),
-                par_hdr->used_size / sizeof(PageIO::page_id_t) *
-                child_nr_data_elem, leaf_chain_length);
-        auto p = par.write<PageHeader>();
-        *p->child_page_id(p->used_size) = leaf_id;
-        p->used_size += sizeof(PageIO::page_id_t);
-    }
+    auto data_offset = par_hdr->used_size / sizeof(PageIO::page_id_t) *
+            par_hdr->child_nr_data_elem + par_hdr->data_offset;
+    auto leaf_id = set_leaf_chain(
+            par.id(), data_offset, leaf_chain_length);
+    auto p = par.write<PageHeader>();
+    *p->child_page_id(p->used_size) = leaf_id;
+    p->used_size += sizeof(PageIO::page_id_t);
 }
 
 void VectorImpl::expand_add_root(
@@ -180,27 +195,24 @@ void VectorImpl::expand_add_root(
             root_nr_data_elem, leaf_chain_length);
 
     auto old_root_hdr = m_root.write<PageHeader>();
+    auto freelist_root = old_root_hdr->freelist_root;
+
+    // update old root
+    {
+        old_root_hdr->parent = new_root.id();
+        old_root_hdr->freelist_root = 0;
+    }
+
 
     // setup root
     {
         auto hdr = new_root.write<PageHeader>();
-        hdr->type = PageType::ROOT;
-        auto &&tr = hdr->header.root;
-        tr.freelist_root = old_root_hdr->header.root.freelist_root;
-        tr.child_nr_data_elem = root_nr_data_elem;
+        hdr->init_zero();
+        hdr->freelist_root = freelist_root;
+        hdr->child_nr_data_elem = root_nr_data_elem;
         hdr->used_size = sizeof(PageIO::page_id_t) * 2;
         hdr->child_page_id(0)[0] = m_root.id();
         hdr->child_page_id(0)[1] = ch1_id;
-    }
-
-    // update old root
-    {
-        usql_assert(old_root_hdr->type == PageType::ROOT ||
-                old_root_hdr->type == PageType::ROOT_AS_LEAF);
-        old_root_hdr->type = PageType::LEAF;
-        auto &&tr = old_root_hdr->header.leaf;
-        tr.parent = new_root.id();
-        tr.data_offset = 0;
     }
 
     set_root(new_root);
@@ -211,40 +223,35 @@ PageIO::page_id_t VectorImpl::set_leaf_chain(
     usql_assert(length);
     auto leaf = m_page_io.alloc();
     PageHeader *hdr = leaf.write<PageHeader>();
-    hdr->type = PageType::LEAF;
-    hdr->used_size = 0;
-    hdr->header.leaf.data_offset = data_offset;
-    auto prev_par = &hdr->header.leaf.parent;
+    hdr->init_zero();
+    hdr->data_offset = data_offset;
     m_last_page = leaf;
     size_t child_nr_data_elem = m_leaf_nr_data_slot;
     auto last_page_id = leaf.id();
     for (size_t i = 1; i < length; i ++) {
         auto internal = m_page_io.alloc();
-        *prev_par = internal.id();
+        hdr = m_page_io.lookup(last_page_id).write<PageHeader>();
+        hdr->parent = internal.id();
         hdr = internal.write<PageHeader>();
-        hdr->type = PageType::INTERNAL;
-        hdr->used_size = 0;
-        hdr->header.internal.child_nr_data_elem = child_nr_data_elem;
-        hdr->header.internal.data_offset = data_offset;
-        prev_par = &hdr->header.internal.parent;
+        hdr->init_zero();
+        hdr->child_nr_data_elem = child_nr_data_elem;
+        hdr->data_offset = data_offset;
+        hdr->used_size = sizeof(PageIO::page_id_t);
+        hdr->child_page_id(0)[0] = last_page_id;
         last_page_id = internal.id();
+        child_nr_data_elem *= m_nonleaf_nr_child;
     }
-    *prev_par = par;
+    hdr->parent = par;
     return last_page_id;
 }
 
 std::pair<VectorImpl::idx_t, void*> VectorImpl::insert() {
+    check_init();
     if (!m_freelist.empty()) {
         FreelistNode fptr = m_freelist.pop();
         PageIO::Page dest_page = m_page_io.lookup(fptr.page);
         auto hdr = dest_page.write<PageHeader>();
-        size_t idx = fptr.slot;
-        if (hdr->type == PageType::LEAF) {
-            idx += hdr->header.leaf.data_offset;
-        } else {
-            usql_assert(hdr->type ==PageType::ROOT_AS_LEAF &&
-                    fptr.page == m_root.id());
-        }
+        size_t idx = fptr.slot + hdr->data_offset;
         return {idx, hdr->payload(fptr.slot * m_elem_size)};
     }
     auto hdr = m_last_page.write<PageHeader>();
@@ -253,31 +260,49 @@ std::pair<VectorImpl::idx_t, void*> VectorImpl::insert() {
         hdr = m_last_page.write<PageHeader>();
     }
     auto ptr = hdr->payload(hdr->used_size);
-    auto idx = hdr->used_size / m_elem_size;
+    auto idx = hdr->used_size / m_elem_size + hdr->data_offset;
     usql_assert(hdr->used_size % m_elem_size == 0);
     hdr->used_size += m_elem_size;
-    if (hdr->type == PageType::LEAF) {
-        idx += hdr->header.leaf.data_offset;
-    } else {
-        usql_assert(hdr->type ==PageType::ROOT_AS_LEAF);
-    }
     return {idx, ptr};
 }
 
 void* VectorImpl::prepare_write(idx_t idx) {
+    check_init();
     auto p = find_page(idx);
     return p.first.write<PageHeader>()->payload(p.second);
 }
 
 const void* VectorImpl::prepare_read(idx_t idx) {
+    check_init();
     auto p = find_page(idx);
     return p.first.read<PageHeader>()->payload(p.second);
 }
 
 std::pair<PageIO::Page, size_t> VectorImpl::find_page(idx_t idx) {
+    PageIO::Page page;
     const PageHeader* hdr = m_last_page.read<PageHeader>();
-    auto last_page_start = hdr->type == PageType::LEAF ?
-        hdr->header.leaf.data_offset : 0;
+    if (idx < hdr->data_offset) {
+        page = m_root;
+        while (!(hdr = page.read<PageHeader>())->is_leaf()) {
+            auto off = (idx - hdr->data_offset) / hdr->child_nr_data_elem *
+                sizeof(PageIO::page_id_t);
+            usql_assert(idx >= hdr->data_offset && off < hdr->used_size);
+            page = m_page_io.lookup(*hdr->child_page_id(off));
+        }
+    } else {
+        page = m_last_page;
+    }
+    size_t off = (idx - hdr->data_offset) * m_elem_size;
+    if (off >= hdr->used_size) {
+        throw std::range_error(ssprintf(
+                    "attempt to access beyond vector: idx=%zd", idx));
+    }
+    return {page, off};
+}
+
+void VectorImpl::erase(size_t idx) {
+    auto p = find_page(idx);
+    m_freelist.push({p.first.id(), p.second / m_elem_size});
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}

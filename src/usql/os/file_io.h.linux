@@ -1,6 +1,6 @@
 /*
  * $File: file_io.h.linux
- * $Date: Tue Oct 21 23:36:50 2014 +0800
+ * $Date: Thu Oct 23 23:51:17 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -57,26 +57,32 @@ class FileIO {
 };
 
 class FileIO::Page {
-    void *m_addr = nullptr;
+    /*!
+     * we could not cache the address here, since allocating new page may
+     * invalidate old address
+     */
+    FileIO *m_fio;
+    size_t m_offset;
     friend class FileIO;
 
-    explicit Page(void *addr):
-        m_addr(addr)
+    explicit Page(FileIO *fio, size_t offset):
+        m_fio(fio), m_offset(offset)
     { }
 
     public:
         Page() = default;
 
         const void* read() const {
-            return m_addr;
+            return static_cast<uint8_t*>(m_fio->m_map_addr) + m_offset;
         }
 
         void* write() {
-            return m_addr;
+            return const_cast<void*>(read());
         }
 
         void reset() {
-            m_addr = nullptr;
+            m_fio = nullptr;
+            m_offset = 0;
         }
 };
 
@@ -84,7 +90,7 @@ class FileIO::Page {
 FileIO::Page FileIO::get_page(size_t pg_idx) {
     usql_assert(pg_idx < m_meta.nr_page,
             "page index %zd exceeds limit(%zd)", pg_idx, m_meta.nr_page);
-    return Page{static_cast<uint8_t*>(m_map_addr) + pg_idx * m_meta.page_size};
+    return Page{this, pg_idx * m_meta.page_size};
 }
 
 }   // namespace usql

@@ -1,6 +1,6 @@
 /*
  * $File: base.h
- * $Date: Wed Oct 22 00:04:50 2014 +0800
+ * $Date: Thu Oct 23 23:47:46 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -17,7 +17,7 @@ class PagedDataStructureBase {
         PagedDataStructureBase(PageIO &page_io);
 
         static constexpr size_t align_elem_size(size_t s) {
-            return (s + 7) & ~(size_t(7));
+            return (s + 3) & ~(size_t(3));
         }
 
         /*!
