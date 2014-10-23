@@ -1,6 +1,6 @@
 /*
  * $File: file_io.h.linux
- * $Date: Tue Oct 21 09:54:53 2014 +0800
+ * $Date: Tue Oct 21 23:36:50 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -65,24 +65,18 @@ class FileIO::Page {
     { }
 
     public:
-        Page(const Page&) = default;
+        Page() = default;
 
         const void* read() const {
             return m_addr;
         }
 
-        /*!
-         * start write operation
-         * \return a buffer to be written to
-         */
-        void* write_start() {
+        void* write() {
             return m_addr;
         }
 
-        /*!
-         * finish previous write
-         */
-        void write_finish() {
+        void reset() {
+            m_addr = nullptr;
         }
 };
 

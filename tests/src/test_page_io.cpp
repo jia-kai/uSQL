@@ -1,6 +1,6 @@
 /*
  * $File: test_page_io.cpp
- * $Date: Mon Oct 20 23:35:49 2014 +0800
+ * $Date: Tue Oct 21 23:39:17 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -18,6 +18,7 @@ TEST_F(PageIOTestEnv, test_dealloc_reuse_one) {
     auto p = m_page_io->alloc();
     auto id = p.id();
     m_page_io->free(std::move(p));
+    EXPECT_FALSE(p.valid());
     EXPECT_EQ(id, m_page_io->alloc().id());
 }
 

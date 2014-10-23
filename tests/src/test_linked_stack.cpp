@@ -1,6 +1,6 @@
 /*
  * $File: test_linked_stack.cpp
- * $Date: Mon Oct 20 23:27:32 2014 +0800
+ * $Date: Tue Oct 21 10:49:49 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -12,7 +12,7 @@ TEST_F(PageIOTestEnv, test_linked_stack) {
     auto root_updator = [&](const PageIO::Page &r) {
         root_id = r.id();
     };
-    LinkedStack<int> stack(*m_page_io, m_page_io->lookup(0), root_updator);
+    LinkedStack<int> stack(*m_page_io, 0, root_updator);
     std::vector<int> stack_check;
 
     size_t nr_item = m_page_io->page_size() * 5;

@@ -1,6 +1,6 @@
 /*
  * $File: page_io.h
- * $Date: Tue Oct 21 09:52:30 2014 +0800
+ * $Date: Tue Oct 21 23:37:30 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -56,7 +56,7 @@ class PageIO::Page {
         }
 
         bool valid() const {
-            // page with 0 id is the meta page
+            // page with 0 id is the meta page, and considered to be invalid
             return m_id != 0;
         }
 
@@ -68,14 +68,15 @@ class PageIO::Page {
         }
 
         template<typename T>
-        T* write_start(size_t offset = 0) {
+        T* write(size_t offset = 0) {
             return reinterpret_cast<T*>(
-                    static_cast<uint8_t*>(m_fpage.write_start())
+                    static_cast<uint8_t*>(m_fpage.write())
                     + offset);
         }
 
-        void write_finish() {
-            m_fpage.write_finish();
+        void reset() {
+            m_id = 0;
+            m_fpage.reset();
         }
 };
 
