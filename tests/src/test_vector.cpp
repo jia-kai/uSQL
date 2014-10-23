@@ -1,6 +1,6 @@
 /*
  * $File: test_vector.cpp
- * $Date: Fri Oct 24 00:33:53 2014 +0800
+ * $Date: Fri Oct 24 00:41:31 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -87,67 +87,80 @@ TEST_F(VectorTestEnv, insert_only) {
 }
 
 TEST_F(VectorTestEnv, random_opr) {
-    std::vector<int> truth;
-    std::vector<size_t> usable_idx;
-    std::unordered_set<size_t> usable_idx_set;
-    auto get_idx = [&](bool remove) {
-        size_t p = rand() / (RAND_MAX + 1.0) * usable_idx.size(),
-               v = usable_idx[p];
-        if (!remove)
+    for (int test_time = 0; test_time < 2; test_time ++) {
+        std::vector<int> truth;
+        std::vector<size_t> usable_idx;
+        std::unordered_set<size_t> usable_idx_set;
+        auto get_idx = [&](bool remove) {
+            size_t p = rand() / (RAND_MAX + 1.0) * usable_idx.size(),
+                   v = usable_idx[p];
+            if (!remove)
+                return v;
+            usable_idx[p] = usable_idx.back();
+            usable_idx.pop_back();
+            auto iter = usable_idx_set.find(v);
+            usql_assert(iter != usable_idx_set.end());
+            usable_idx_set.erase(iter);
             return v;
-        usable_idx[p] = usable_idx.back();
-        usable_idx.pop_back();
-        auto iter = usable_idx_set.find(v);
-        usql_assert(iter != usable_idx_set.end());
-        usable_idx_set.erase(iter);
-        return v;
-    };
-    const size_t HEIGHT = 13,
-          NR_INSERT = pow(internal_branch(), HEIGHT - 1) * TREE_LEAF_BRANCH;
-    while (usable_idx.size() < NR_INSERT) {
-        if (!usable_idx.empty() && rand() <= RAND_MAX / 4) {
-            // delete
-            auto idx = get_idx(true);
-            ASSERT_NE(0, truth[idx]);
-            m_vec->erase(idx);
-            truth[idx] = 0;
+        };
+        const size_t HEIGHT = 13,
+              NR_INSERT = pow(internal_branch(), HEIGHT - 1) * TREE_LEAF_BRANCH;
+        while (usable_idx.size() < NR_INSERT) {
+            if (!usable_idx.empty() && rand() <= RAND_MAX / 4) {
+                // delete
+                auto idx = get_idx(true);
+                ASSERT_NE(0, truth[idx]);
+                m_vec->erase(idx);
+                truth[idx] = 0;
+                m_vec->sanity_check_get_height();
+                continue;
+            }
+
+            // insert
+            int v = rand();
+            v += !v;
+            auto idx = m_vec->insert(v);
+            if (idx >= truth.size()) {
+                if (!test_time) {
+                    ASSERT_EQ(truth.size(), idx);
+                    truth.push_back(v);
+                } else {
+                    truth.resize(idx + 1, 0);
+                    truth[idx] = v;
+                }
+            } else {
+                ASSERT_EQ(0, truth[idx]);
+                truth[idx] = v;
+            }
+            usable_idx.push_back(idx);
+            usable_idx_set.insert(idx);
             m_vec->sanity_check_get_height();
-            continue;
-        }
 
-        // insert
-        int v = rand();
-        v += !v;
-        auto idx = m_vec->insert(v);
-        if (idx >= truth.size()) {
-            ASSERT_EQ(truth.size(), idx);
-            truth.push_back(v);
-        } else {
-            ASSERT_EQ(0, truth[idx]);
+            // read
+            idx = get_idx(false);
+            ASSERT_EQ(truth[idx], m_vec->read(idx));
+
+            // write
+            idx = get_idx(false);
+            v = rand();
+            v += !v;
             truth[idx] = v;
+            m_vec->write(idx, v);
         }
-        usable_idx.push_back(idx);
-        usable_idx_set.insert(idx);
-        m_vec->sanity_check_get_height();
 
-        // read
-        idx = get_idx(false);
-        ASSERT_EQ(truth[idx], m_vec->read(idx));
+        EXPECT_EQ(HEIGHT, m_vec->sanity_check_get_height());
 
-        // write
-        idx = get_idx(false);
-        v = rand();
-        v += !v;
-        truth[idx] = v;
-        m_vec->write(idx, v);
+        std::random_shuffle(usable_idx.begin(), usable_idx.end());
+
+        for (auto i: usable_idx)
+            ASSERT_EQ(truth[i], m_vec->read(i));
+
+        ASSERT_EQ(NR_INSERT - 1,
+                *std::max_element(usable_idx.begin(), usable_idx.end()));
+
+        for (size_t i = 0; i < NR_INSERT; i ++)
+            m_vec->erase(i);
     }
-
-    EXPECT_LE(HEIGHT, m_vec->sanity_check_get_height());
-
-    std::random_shuffle(usable_idx.begin(), usable_idx.end());
-
-    for (auto i: usable_idx)
-        ASSERT_EQ(truth[i], m_vec->read(i));
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}

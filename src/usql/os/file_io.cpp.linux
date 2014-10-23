@@ -1,6 +1,6 @@
 /*
  * $File: file_io.cpp.linux
- * $Date: Tue Oct 21 09:55:07 2014 +0800
+ * $Date: Fri Oct 24 00:43:13 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -56,7 +56,12 @@ void FileIO::operator = (FileIO &&rhs) {
 FileIO::~FileIO() {
     if (!m_map_addr)
         return;
-    usql_log("close database fd=%d", m_fd);
+    {
+        double k = m_meta.page_size / 1024.0 / 1024.0;
+        usql_log("close database: fd=%d size=%.3f/%.3fMiB", m_fd,
+                    m_meta.nr_page_allocated * k,
+                    m_meta.nr_page * k);
+    }
     sync_meta();
     size_t length = m_meta.nr_page * m_meta.page_size;
     auto v = msync(m_map_addr, length, MS_SYNC);
