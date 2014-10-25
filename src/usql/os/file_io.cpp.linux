@@ -90,13 +90,24 @@ void FileIO::extend_size(size_t tgt_nr_page) {
     ftruncate(m_fd, new_len);
     #ifdef _GNU_SOURCE
     m_map_addr = mremap(m_map_addr, old_len, new_len, MREMAP_MAYMOVE);
+    usql_assert(m_map_addr != MAP_FAILED, "failed to remap: %s", strerror(errno));
     #else
+    // it's *SLOW*, better way to replace mremap in non-GNU system?
+    auto new_map_addr = mmap(NULL, new_len, PROT_READ | PROT_WRITE,
+            MAP_PRIVATE, m_fd, 0);
+    usql_assert(m_map_addr != MAP_FAILED, "failed to map while remapping: %s", strerror(errno));
+
+    memmove(new_map_addr, m_map_addr, old_len);
     auto v = munmap(m_map_addr, old_len);
     usql_assert(!v, "failed to unmap while remapping: %s", strerror(errno));
-    m_map_addr = mmap(NULL, new_len, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE, m_fd, 0);
+
+    m_map_addr = new_map_addr;
+
     #endif
-    usql_assert(m_map_addr != MAP_FAILED, "failed to remap: %s", strerror(errno));
+
+    m_meta = *static_cast<DBMeta*>(m_map_addr);
+    usql_assert(m_meta.check_magic());
+    usql_assert(new_len == m_meta.nr_page * m_meta.page_size);
 }
 
 // vim: ft=cpp syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
