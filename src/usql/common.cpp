@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 #include <unistd.h>
 
@@ -31,7 +32,12 @@ void usql::__usql_log__(const char *file, const char *func, int line,
 
 	{
 		LOCK_GUARD(mtx);
+        #ifdef _GNU_SOURCE
 		fprintf(stderr, time_fmt, timestr, func, basename(strdupa(file)), line);
+        #else
+        // strdupa is only present on GNU GCC
+        fprintf(stderr, time_fmt, timestr, func, file, line);
+        #endif
 
 		va_list ap;
 		va_start(ap, fmt);

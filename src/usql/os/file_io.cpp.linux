@@ -25,21 +25,21 @@ FileIO::FileIO(const char *path, size_t default_page_size) {
         DBMeta meta;
         meta.init(default_page_size);
         FILE *fout = fopen(path, "wb");
-        usql_assert(fout, "failed to open %s: %m", path);
+        usql_assert(fout, "failed to open %s: %s", path, strerror(errno));
         fwrite(&meta, sizeof(meta), 1, fout);
         ftruncate(fileno(fout), default_page_size);
         fclose(fout);
     }
 
     m_fd = open(path, O_APPEND | O_CREAT | O_RDWR, 0644);
-    usql_assert(m_fd != -1, "failed to open %s: %m", path);
+    usql_assert(m_fd != -1, "failed to open %s: %s", path, strerror(errno));
     struct stat stat;
     fstat(m_fd, &stat);
     size_t fsize = stat.st_size;
     usql_assert(fsize >= sizeof(DBMeta));
     m_map_addr = mmap(NULL, fsize, PROT_READ | PROT_WRITE,
             MAP_PRIVATE, m_fd, 0);
-    usql_assert(m_map_addr != MAP_FAILED, "failed to map: %m");
+    usql_assert(m_map_addr != MAP_FAILED, "failed to map: %s", strerror(errno));
     m_meta = *static_cast<DBMeta*>(m_map_addr);
     usql_assert(m_meta.check_magic());
     usql_assert(fsize == m_meta.nr_page * m_meta.page_size);
@@ -65,11 +65,11 @@ FileIO::~FileIO() {
     sync_meta();
     size_t length = m_meta.nr_page * m_meta.page_size;
     auto v = msync(m_map_addr, length, MS_SYNC);
-    usql_assert(!v, "failed to msync: %m");
+    usql_assert(!v, "failed to msync: %s", strerror(errno));
     v = munmap(m_map_addr, length);
-    usql_assert(!v, "failed to unmap: %m");
+    usql_assert(!v, "failed to unmap: %s", strerror(errno));
     v = close(m_fd);
-    usql_assert(!v, "failed to close: %m");
+    usql_assert(!v, "failed to close: %s", strerror(errno));
 }
 
 void FileIO::sync_meta() {
@@ -88,8 +88,15 @@ void FileIO::extend_size(size_t tgt_nr_page) {
     update_meta_finish();
     sync_meta();
     ftruncate(m_fd, new_len);
+    #ifdef _GNU_SOURCE
     m_map_addr = mremap(m_map_addr, old_len, new_len, MREMAP_MAYMOVE);
-    usql_assert(m_map_addr != MAP_FAILED, "failed to remap: %m");
+    #else
+    auto v = munmap(m_map_addr, old_len);
+    usql_assert(!v, "failed to unmap while remapping: %s", strerror(errno));
+    m_map_addr = mmap(NULL, new_len, PROT_READ | PROT_WRITE,
+            MAP_PRIVATE, m_fd, 0);
+    #endif
+    usql_assert(m_map_addr != MAP_FAILED, "failed to remap: %s", strerror(errno));
 }
 
 // vim: ft=cpp syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
