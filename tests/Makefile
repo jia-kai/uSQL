@@ -1,5 +1,5 @@
 # $File: Makefile
-# $Date: Mon Oct 20 23:27:59 2014 +0800
+# $Date: Tue Nov 04 23:59:10 2014 +0800
 # $Author: jiakai <jia.kai66@gmail.com>
 
 # Points to the root of Google Test, relative to where this file is.
@@ -80,6 +80,9 @@ $(TARGET): $(OBJS) $(BUILD_DIR)/gtest_main.a
 	$(V)$(CXX) $^ -o $@ -lpthread $(LDFLAGS)
 
 clean:
+	rm -rf $(BUILD_DIR)/src $(TARGET)
+
+clean-full:
 	rm -rf $(BUILD_DIR) $(TARGET)
 
 run: $(TARGET)
@@ -96,7 +99,7 @@ git:
 gprof:
 	OPTFLAG='-O3 -pg' LDFLAGS=-pg make -j4
 
-.PHONY: all clean run gdb git gprof
+.PHONY: all clean clean-full run gdb git gprof
 
 # vim: ft=make
 

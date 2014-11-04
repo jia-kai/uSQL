@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Tue Nov 04 23:57:13 2014 +0800
+ * $Date: Wed Nov 05 00:07:16 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -271,6 +271,19 @@ DEF(void*, visit) (const Key &key) {
 
 DEF(CLS::Datapos, find_data_pos) (
         const Key &key, bool insert_on_missing) {
+    if (!m_root.valid()) {
+        if (!insert_on_missing) {
+            return {m_root, 0};
+        }
+        auto new_root = m_page_io.alloc();
+        auto hdr = new_root.template write<LeafHeader>();
+        hdr->type = PageType::LEAF;
+        hdr->nr_item = 1;
+        hdr->next_sibling = 0;
+        hdr->item(this, 0).key = key;
+        set_root(new_root);
+        return {new_root, 0};
+    }
     auto lhdr = do_lookup(key);
     uint32_t idx = m_lookup_hist.back().idx;
     PageIO::Page tp = m_lookup_hist.back().page;
@@ -471,6 +484,11 @@ DEF(, Iterator::Iterator) (BTree &btree, PageIO::Page &page, uint32_t idx):
 }
 
 DEF(void, Iterator::load) (const PageIO::Page &page) {
+    if (!page.valid()) {
+        m_cur_offset = 1;
+        m_max_offset = 0;
+        return;
+    }
     auto hdr = page.read<HeaderBase>();
     usql_assert(hdr->type == PageType::LEAF);
     m_cur_page = page;
