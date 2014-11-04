@@ -1,6 +1,6 @@
 /*
  * $File: test_btree.cpp
- * $Date: Tue Nov 04 23:46:54 2014 +0800
+ * $Date: Wed Nov 05 00:20:33 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -13,10 +13,6 @@ constexpr size_t TREE_INTERNAL_BRANCH = 4;
 struct Key {
     int key;
 
-    bool operator < (const Key &rhs) const {
-        return key < rhs.key;
-    }
-
     Key() = default;
 
     explicit Key(int n):
@@ -25,7 +21,13 @@ struct Key {
     }
 };
 
-using Btree = TypedBTree<Key, int>;
+struct KeyCmp {
+    bool operator () (const Key &a, const Key & b) {
+        return a.key < b.key;
+    }
+};
+
+using Btree = TypedBTree<Key, int, KeyCmp>;
 
 using BTreeTestEnvBase = PageIOTestEnvTpl<
     (Btree::internal_header_size() + sizeof(Key) + sizeof(PageIO::page_id_t)) *

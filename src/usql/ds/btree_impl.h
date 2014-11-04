@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Wed Nov 05 00:07:16 2014 +0800
+ * $Date: Wed Nov 05 00:16:11 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -229,7 +229,7 @@ DEF(template<class Hdr> int, bsearch) (const Hdr *hdr, const Key &key) {
     // the next item after last is thought to be infinity
     // i exists in [left, right] such that a[i] > key, find such minimal i
     while (left < right) {
-        int mid = (left + right) / 2;
+        auto mid = (left + right) / 2;
         bool cond = !m_cmpkey(key, hdr->item(this, mid).key); // a[mid] <= key
         left = cond ? mid + 1 : left;
         right = cond ? right : mid;
