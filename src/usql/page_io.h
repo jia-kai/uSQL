@@ -1,6 +1,6 @@
 /*
  * $File: page_io.h
- * $Date: Tue Oct 21 23:37:30 2014 +0800
+ * $Date: Tue Nov 04 22:35:12 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -13,10 +13,16 @@ namespace usql {
 template<typename T>
 class LinkedStack;
 
+/*!
+ * page-based file management, with allocation and deallocation support
+ */
 class PageIO {
     public:
         using page_id_t = size_t;
         class Page;
+
+        template<typename T>
+        class Ptr;
 
         PageIO(FileIO &&fio);
         ~PageIO();
@@ -62,6 +68,7 @@ class PageIO::Page {
 
         template<typename T>
         const T* read(size_t offset = 0) const {
+            usql_assert(valid());
             return reinterpret_cast<const T*>(
                     static_cast<const uint8_t*>(m_fpage.read())
                     + offset);
@@ -69,6 +76,7 @@ class PageIO::Page {
 
         template<typename T>
         T* write(size_t offset = 0) {
+            usql_assert(valid());
             return reinterpret_cast<T*>(
                     static_cast<uint8_t*>(m_fpage.write())
                     + offset);
@@ -78,7 +86,37 @@ class PageIO::Page {
             m_id = 0;
             m_fpage.reset();
         }
+
+        template<typename T>
+        inline PageIO::Ptr<T> make_ptr(size_t offset);
 };
+
+template<typename T>
+class PageIO::Ptr {
+    friend class PageIO::Page;
+    PageIO::Page &m_page;
+    size_t m_offset;
+
+    Ptr(PageIO::Page &p, size_t offset):
+        m_page(p), m_offset(offset)
+    {
+    }
+
+    public:
+        T* operator -> () {
+            return m_page.read<T>(m_offset);
+        }
+
+        T& operator * () {
+            return *(this->operator->());
+        }
+};
+
+template<typename T>
+PageIO::Ptr<T> PageIO::Page::make_ptr(size_t offset) {
+    usql_assert(valid());
+    return {*this, offset};
+}
 
 PageIO::Page PageIO::lookup(page_id_t id) {
     return {id, m_fio.get_page(id)};
