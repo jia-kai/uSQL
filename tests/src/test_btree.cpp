@@ -1,6 +1,6 @@
 /*
  * $File: test_btree.cpp
- * $Date: Thu Nov 06 01:05:26 2014 +0800
+ * $Date: Thu Nov 06 01:13:10 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -69,6 +69,8 @@ class RandMap {
             auto r = m_map.insert({key, val});
             if (r.second)
                 m_key.push_back(key);
+            else
+                r.first->second = val;
         }
 
         const val_t& operator[] (const Key &key) const {
@@ -182,6 +184,15 @@ TEST_F(BTreeTestEnv, rand_opr) {
                 ASSERT_FALSE(m_tree->erase(k));
             }
         }
+
+        if (rand() <= RAND_MAX / 5 && check.size()) {
+            // overwrite existing entry
+            auto &&k = check.sample();
+            val_t v = rand();
+            check.assign(k, v);
+            m_tree->visit(k) = v;
+        }
+
         m_tree->sanity_check();
     }
 
