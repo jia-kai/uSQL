@@ -1,10 +1,11 @@
 /*
  * $File: test_vector.cpp
- * $Date: Fri Oct 24 00:41:31 2014 +0800
+ * $Date: Wed Nov 05 19:56:38 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "./page_io_env.h"
+#include "./utils.h"
 
 #include "usql/ds/vector.h"
 
@@ -14,16 +15,10 @@
 
 constexpr size_t TREE_LEAF_BRANCH = 4;
 
-static size_t pow(size_t b, size_t p) {
-    size_t x = 1;
-    for (size_t i = 0; i < p; i ++)
-        x *= b;
-    return x;
-}
-
 using VectorTestEnvBase = PageIOTestEnvTpl<
     VectorImpl::header_size() + sizeof(int) * TREE_LEAF_BRANCH>;
 
+namespace {
 class VectorTestEnv : public VectorTestEnvBase {
     protected:
         PageIO::page_id_t m_vec_root = 0;
@@ -46,6 +41,7 @@ class VectorTestEnv : public VectorTestEnvBase {
                 sizeof(PageIO::page_id_t);
         }
 };
+}
 
 TEST_F(VectorTestEnv, simple_insert) {
     int v = rand();

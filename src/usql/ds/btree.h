@@ -1,6 +1,6 @@
 /*
  * $File: btree.h
- * $Date: Tue Nov 04 23:51:37 2014 +0800
+ * $Date: Thu Nov 06 00:12:25 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -40,6 +40,8 @@ class BTree: public PagedDataStructureBase {
             return 16;
         }
 
+        void sanity_check() const;
+
     private:
 
         enum class PageType;
@@ -52,15 +54,20 @@ class BTree: public PagedDataStructureBase {
         KeyLess m_cmpkey;
         size_t m_leaf_item_size,
                m_leaf_nr_data_slot, m_internal_nr_child,
-               m_leaf_merge_threh, m_internal_merge_thresh;
+               m_leaf_merge_thresh, m_internal_merge_thresh;
         // merge or redistribute when < thresh
 
         std::vector<LookupHistEntry> m_lookup_hist;
 
         /*!
          * perform lookup and store in m_lookup_hist
+         * for internal nodes, item[idx] <= key < item[idx + 1]
+         * for leaf node, item[idx - 1] < key <= item[idx]
          */
-        const LeafHeader* do_lookup(const Key &key);
+        std::pair<const LeafHeader*, uint32_t> do_lookup(const Key &key);
+
+        //! whether to check minimum node size
+        bool m_sanity_check_min_size = true; 
 
         /*!
          * \return i such that item[i] <= key < item[i+1]
@@ -83,6 +90,10 @@ class BTree: public PagedDataStructureBase {
 
         Datapos find_data_pos(
                 const Key &key, bool insert_on_missing);
+
+        void do_sanity_check(const PageIO::Page &root,
+                const Key *lower, const Key *upper,
+                PageIO::page_id_t &expected_next_leaf) const;
 };
 
 template<class Key, class KeyLess>

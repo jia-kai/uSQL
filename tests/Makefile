@@ -1,5 +1,5 @@
 # $File: Makefile
-# $Date: Tue Nov 04 23:59:10 2014 +0800
+# $Date: Wed Nov 05 20:08:42 2014 +0800
 # $Author: jiakai <jia.kai66@gmail.com>
 
 # Points to the root of Google Test, relative to where this file is.
@@ -12,7 +12,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 BUILD_DIR = build
 TARGET = usql_test
-ARGS = 
+override ARGS ?= 
 
 CXX = g++ -std=c++1y
 
@@ -26,8 +26,7 @@ override OPTFLAG ?= -O2
 
 override CXXFLAGS += \
 	-ggdb \
-	-Wall -Wextra -Wno-unknown-warning-option -Wnon-virtual-dtor -Wno-unused-parameter -Winvalid-pch \
-	-Wno-unused-local-typedefs \
+	-Wall -Wextra -Wnon-virtual-dtor -Wno-unused-parameter -Winvalid-pch \
 	$(CPPFLAGS) $(OPTFLAG)
 override V ?= @
 

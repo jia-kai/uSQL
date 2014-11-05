@@ -1,14 +1,19 @@
 /*
  * $File: test_btree.cpp
- * $Date: Wed Nov 05 00:20:33 2014 +0800
+ * $Date: Thu Nov 06 00:17:41 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "./page_io_env.h"
+#include "./utils.h"
 
 #include "usql/ds/btree.h"
 
+#include <map>
+
 constexpr size_t TREE_INTERNAL_BRANCH = 4;
+
+namespace {
 
 struct Key {
     int key;
@@ -22,12 +27,13 @@ struct Key {
 };
 
 struct KeyCmp {
-    bool operator () (const Key &a, const Key & b) {
+    bool operator () (const Key &a, const Key & b) const {
         return a.key < b.key;
     }
 };
 
-using Btree = TypedBTree<Key, int, KeyCmp>;
+using val_t = int;
+using Btree = TypedBTree<Key, val_t, KeyCmp>;
 
 using BTreeTestEnvBase = PageIOTestEnvTpl<
     (Btree::internal_header_size() + sizeof(Key) + sizeof(PageIO::page_id_t)) *
@@ -51,9 +57,78 @@ class BTreeTestEnv : public BTreeTestEnvBase {
         }
 };
 
+/*!
+ * map that allows sampling
+ */
+class RandMap {
+    std::map<Key, val_t, KeyCmp> m_map;
+    std::vector<Key> m_key;
+
+    public:
+        void assign(const Key &key, const val_t &val) {
+            auto r = m_map.insert({key, val});
+            if (r.second)
+                m_key.push_back(key);
+        }
+
+        const val_t& operator[] (const Key &key) const {
+            auto iter = m_map.find(key);
+            usql_assert(iter != m_map.end());
+            return iter->second;
+        }
+
+        const Key& sample() {
+            usql_assert(!m_key.empty());
+            auto idx = size_t(rand() / (RAND_MAX + 1.0) * double(m_key.size()));
+            std::swap(m_key[idx], m_key.back());
+            return m_key.back();
+        }
+
+        void remove_prev_sampled() {
+            usql_assert(!m_key.empty());
+            m_map.erase(m_key.back());
+            m_key.pop_back();
+        }
+};
+
+} // annonymous namespace
+
 TEST_F(BTreeTestEnv, simple_insert) {
     m_tree->visit(Key{123}) = 456;
+    m_tree->sanity_check();
     EXPECT_EQ(456, m_tree->visit(Key{123}));
+}
+
+TEST_F(BTreeTestEnv, erase_after_insert) {
+    RandMap check;
+    const size_t NR = pow(TREE_INTERNAL_BRANCH, 7);
+
+    auto check_read = [&](size_t i) {
+        auto &&k = check.sample();
+        auto v_check = check[k],
+             v_get = m_tree->visit(k);
+        usql_assert(v_check == v_get, "unequal: i=%zd expect=%d get=%d key=%d",
+                i, v_check, v_get, k.key);
+        return k;
+    };
+
+    for (size_t i = 0; i < NR; i ++) {
+        // insert
+        Key k{rand()};
+        val_t v = rand();
+        check.assign(k, v);
+        m_tree->visit(k) = v;
+        m_tree->sanity_check();
+
+        check_read(i);
+    }
+
+    for (size_t i = 0; i < NR; i ++) {
+        auto &&k = check_read(i);
+        EXPECT_TRUE(m_tree->erase(k));
+        m_tree->sanity_check();
+        check.remove_prev_sampled();
+    }
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}

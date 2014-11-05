@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Wed Nov 05 00:16:11 2014 +0800
+ * $Date: Thu Nov 06 00:15:26 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -64,8 +64,9 @@ DEF(struct, InternalHeader) {
         return _item[idx];
     }
 
-    const Item& item(BTree *tree, int idx) const {
-        return const_cast<InternalHeader*>(this)->item(tree, idx);
+    const Item& item(const BTree *tree, int idx) const {
+        return const_cast<InternalHeader*>(this)->item(
+                const_cast<BTree*>(tree), idx);
     }
 
     Item& insert(BTree *tree, uint32_t idx) {
@@ -87,18 +88,33 @@ DEF(struct, InternalHeader) {
         uint32_t sum = nr_item + rhs->nr_item;
         if (sum < tree->m_internal_merge_thresh * 2)
             return false;
-        uint32_t tgt = sum / 2, delta = tgt - nr_item;
-        usql_assert(tgt > nr_item && rhs->nr_item > delta &&
-                tgt <= tree->m_internal_nr_child);
-        _item[nr_item].key = mid_key;
-        _item[nr_item].ch = rhs->ch0;
-        nr_item ++;
-        copy(_item + nr_item, rhs->_item, delta - 1);
-        nr_item += delta - 1;
-        mid_key = rhs->_item[delta].key;
-        rhs->ch0 = rhs->_item[delta].ch;
-        move(rhs->_item, &rhs->item(tree, delta), rhs->nr_item - delta);
-        rhs->nr_item -= delta;
+        uint32_t tgt = sum / 2;
+        usql_assert(tgt <= tree->m_internal_nr_child);
+        if (nr_item > rhs->nr_item) {
+            // move delta items to rhs
+            auto delta = tgt - rhs->nr_item;
+            usql_assert(tgt > rhs->nr_item && nr_item > delta);
+            move(rhs->_item + delta, rhs->_item, rhs->nr_item);
+            rhs->_item[delta - 1].key = mid_key;
+            rhs->_item[delta - 1].ch = rhs->ch0;
+            nr_item -= delta;
+            copy(rhs->_item, _item + nr_item + 1, delta - 1);
+            mid_key = _item[nr_item].key;
+            rhs->ch0 = _item[nr_item].ch;
+            rhs->nr_item += delta;
+        } else {
+            // move delta items from rhs
+            auto delta = tgt - nr_item;
+            usql_assert(tgt > nr_item && rhs->nr_item > delta);
+            _item[nr_item].key = mid_key;
+            _item[nr_item].ch = rhs->ch0;
+            copy(_item + nr_item + 1, rhs->_item, delta - 1);
+            nr_item += delta;
+            mid_key = rhs->_item[delta - 1].key;
+            rhs->ch0 = rhs->_item[delta - 1].ch;
+            rhs->nr_item -= delta;
+            move(rhs->_item, rhs->_item + delta, rhs->nr_item);
+        }
         return true;
     }
 
@@ -138,8 +154,9 @@ DEF(struct, LeafHeader) {
     Item& item(BTree *tree, int idx) {
         return *reinterpret_cast<Item*>(_item + idx * tree->m_leaf_item_size);
     }
-    const Item& item(BTree *tree, int idx) const {
-        return const_cast<LeafHeader*>(this)->item(tree, idx);
+    const Item& item(const BTree *tree, int idx) const {
+        return const_cast<LeafHeader*>(this)->item(
+                const_cast<BTree*>(tree), idx);
     }
 
     Item& insert(BTree *tree, uint32_t idx) {
@@ -162,16 +179,30 @@ DEF(struct, LeafHeader) {
 
     bool redistribute_with(BTree *tree, LeafHeader *rhs, Key &mid_key) {
         auto sum = nr_item + rhs->nr_item;
-        if (sum < tree->m_leaf_nr_data_slot)
+        if (sum < tree->m_leaf_merge_thresh * 2)
             return false;
-        auto tgt = sum / 2, delta = tgt - nr_item;
-        usql_assert(tgt > nr_item && rhs->nr_item > delta &&
-                tgt <= tree->m_leaf_nr_data_slot);
-        copy(tree, &item(tree, nr_item), &rhs->item(tree, 0), delta);
-        move(tree, &rhs->item(tree, 0), &rhs->item(tree, delta),
-                rhs->nr_item - delta);
-        nr_item += delta;
-        rhs->nr_item -= delta;
+        auto tgt = sum / 2; 
+        usql_assert(tgt <= tree->m_leaf_nr_data_slot);
+        if (nr_item > rhs->nr_item) {
+            // move to rhs
+            auto delta = tgt - rhs->nr_item;
+            usql_assert(tgt > rhs->nr_item && nr_item > delta);
+            move(tree, &rhs->item(tree, delta), &rhs->item(tree, 0),
+                    rhs->nr_item);
+            copy(tree, &rhs->item(tree, 0),
+                    &item(tree, nr_item - delta), delta);
+            nr_item -= delta;
+            rhs->nr_item += delta;
+        } else {
+            // move from rhs
+            auto delta = tgt - nr_item;
+            usql_assert(tgt > nr_item && rhs->nr_item > delta);
+            copy(tree, &item(tree, nr_item), &rhs->item(tree, 0), delta);
+            rhs->nr_item -= delta;
+            move(tree, &rhs->item(tree, 0), &rhs->item(tree, delta),
+                    rhs->nr_item);
+            nr_item += delta;
+        }
         mid_key = rhs->item(tree, 0).key;
         return true;
     }
@@ -211,7 +242,7 @@ DEF(, BTree) (PageIO &page_io, size_t payload_size, const KeyLess &cmpkey):
             m_leaf_item_size),
     m_internal_nr_child((page_io.page_size() - sizeof(InternalHeader)) /
             sizeof(typename InternalHeader::Item)),
-    m_leaf_merge_threh(m_leaf_nr_data_slot / 3 + 1),
+    m_leaf_merge_thresh(m_leaf_nr_data_slot / 3 + 1),
     m_internal_merge_thresh(m_internal_nr_child / 3 + 1)
 {
     static_assert(sizeof(InternalHeader) == internal_header_size(),
@@ -237,7 +268,11 @@ DEF(template<class Hdr> int, bsearch) (const Hdr *hdr, const Key &key) {
     return int(left) - 1;
 }
 
-DEF(const CLS::LeafHeader*, do_lookup) (const Key &key) {
+// define a macro to avoid the comma in template ambiguous with that in macro
+#define R std::pair<const CLS::LeafHeader*, uint32_t>
+
+DEF(R, do_lookup) (const Key &key) {
+
     m_lookup_hist.clear();
     PageIO::Page node = m_root;
     for (; ; ) {
@@ -249,7 +284,7 @@ DEF(const CLS::LeafHeader*, do_lookup) (const Key &key) {
                 idx ++;
             }
             m_lookup_hist.push_back({node, idx});
-            return lhdr;
+            return {lhdr, idx};
         }
         auto ihdr = bhdr->as_internal();
         int idx = bsearch(ihdr, key);
@@ -257,6 +292,7 @@ DEF(const CLS::LeafHeader*, do_lookup) (const Key &key) {
         node = m_page_io.lookup(ihdr->item(this, idx).ch);
     }
 }
+#undef R
 
 DEF(CLS::Iterator, lookup) (const Key &key, bool insert_on_missing) {
     auto pos = find_data_pos(key, insert_on_missing);
@@ -284,11 +320,12 @@ DEF(CLS::Datapos, find_data_pos) (
         set_root(new_root);
         return {new_root, 0};
     }
-    auto lhdr = do_lookup(key);
-    uint32_t idx = m_lookup_hist.back().idx;
+    const LeafHeader* lhdr;
+    uint32_t idx;
+    std::tie(lhdr, idx) = do_lookup(key);
     PageIO::Page tp = m_lookup_hist.back().page;
     if (insert_on_missing && (idx >= lhdr->nr_item ||
-                m_cmpkey(lhdr->item(this, idx).key, key))) {
+                m_cmpkey(key, lhdr->item(this, idx).key))) {
         if (lhdr->nr_item == m_leaf_nr_data_slot)
             std::tie(tp, idx) = split_last_lookup_leaf(key);
         else
@@ -306,7 +343,8 @@ DEF(CLS::Datapos, split_last_lookup_leaf) (const Key &new_key) {
          new_hdr = new_page.write<LeafHeader>();
     usql_assert(
             (!idx || m_cmpkey(old_hdr->item(this, idx - 1).key, new_key)) &&
-            m_cmpkey(new_key, old_hdr->item(this, idx).key));
+            (idx == old_hdr->nr_item ||
+             m_cmpkey(new_key, old_hdr->item(this, idx).key)));
     new_hdr->nr_item = m_leaf_nr_data_slot - mid;
     old_hdr->nr_item = mid;
     new_hdr->type = PageType::LEAF;
@@ -314,11 +352,14 @@ DEF(CLS::Datapos, split_last_lookup_leaf) (const Key &new_key) {
     old_hdr->next_sibling = new_page.id();
     LeafHeader::copy(this, &new_hdr->item(this, 0), &old_hdr->item(this, mid),
             new_hdr->nr_item);
+    // it is important to copy the key here, since otherwise the const ref may
+    // get invalidated due to allocations performed in setup_new_root or
+    // insert_internal
+    Key mid_key = new_hdr->item(this, 0).key;
     if (m_lookup_hist.size() == 1) {
-        setup_new_root(old_page, new_page, new_hdr->item(this, 0).key);
+        setup_new_root(old_page, new_page, mid_key);
     } else {
-        insert_internal(m_lookup_hist.size() - 2,
-                new_hdr->item(this, 0).key, new_page.id());
+        insert_internal(m_lookup_hist.size() - 2, mid_key, new_page.id());
     }
     if (idx <= mid) {
         old_hdr = old_page.write<LeafHeader>();
@@ -402,17 +443,24 @@ DEF(bool, erase) (const Key &key) {
     auto hdr = hist.page.template write<LeafHeader>();
     if (!hdr->erase(this, hist.idx, key))
         return false;
-    if (m_lookup_hist.size() == 1 || hdr->nr_item >= m_leaf_merge_threh)
+    if (m_lookup_hist.size() == 1 || hdr->nr_item >= m_leaf_merge_thresh) {
+        if (!hdr->nr_item) {
+            // empty root
+            m_page_io.free(std::move(m_root));
+            set_root(m_page_io.lookup(0));
+        }
         return true;
+    }
     redistribute_or_merge<LeafHeader>(m_lookup_hist.size() - 1);
     return true;
 }
 
 DEF(template<class Hdr> void, redistribute_or_merge) (size_t hist_idx) {
     usql_assert(hist_idx);
-    auto hdr = m_lookup_hist[hist_idx].page.template write<Hdr>();
-    auto par_hdr = m_lookup_hist[hist_idx - 1].page.
-        template write<InternalHeader>();
+    auto &&cur_page = m_lookup_hist[hist_idx].page;
+    auto &&par_page = m_lookup_hist[hist_idx - 1].page;
+    auto hdr = cur_page.template write<Hdr>();
+    auto par_hdr = par_page.template write<InternalHeader>();
     auto idx = m_lookup_hist[hist_idx - 1].idx;
     Hdr *sib_prev = nullptr, *sib_next = nullptr;
     Key &key_prev = par_hdr->item(this, idx).key,
@@ -435,7 +483,7 @@ DEF(template<class Hdr> void, redistribute_or_merge) (size_t hist_idx) {
 
     if (sib_prev) {
         sib_prev->merge_from(this, hdr, key_prev);
-        m_page_io.free(std::move(m_lookup_hist[hist_idx].page));
+        m_page_io.free(std::move(cur_page));
         par_hdr->erase(idx);
     } else {
         usql_assert(sib_next);
@@ -455,8 +503,8 @@ DEF(template<class Hdr> void, redistribute_or_merge) (size_t hist_idx) {
                 if (sib_prev)
                     set_root(sib_prev_page);
                 else
-                    set_root(m_lookup_hist[hist_idx].page);
-                m_page_io.free(std::move(m_lookup_hist[hist_idx - 1].page));
+                    set_root(cur_page);
+                m_page_io.free(std::move(par_page));
             }
         }
     }
@@ -472,6 +520,65 @@ DEF(void, setup_new_root) (PageIO::Page &ch0, PageIO::Page &ch1,
     hdr->item(this, 0).key = ch1_split;
     hdr->item(this, 0).ch = ch1.id();
     set_root(root_page);
+}
+
+DEF(void, sanity_check) () const {
+    PageIO::page_id_t expected_next_leaf = 0;
+    if (m_root.valid())
+        do_sanity_check(m_root, nullptr, nullptr, expected_next_leaf);
+}
+
+DEF(void, do_sanity_check) (const PageIO::Page &root,
+        const Key *lower, const Key *upper,
+        PageIO::page_id_t &expected_next_leaf) const {
+    usql_assert(root.valid());
+    auto base_hdr = root.read<HeaderBase>();
+    auto check_key_range = [&](const Key &key) {
+        if (lower)
+            usql_assert(!m_cmpkey(key, *lower));
+        if (upper)
+            usql_assert(m_cmpkey(key, *upper));
+    };
+
+    usql_assert(base_hdr->nr_item);
+
+    if (base_hdr->type == PageType::INTERNAL) {
+        auto hdr = base_hdr->as_internal();
+        usql_assert(hdr->nr_item <= m_internal_nr_child);
+        if (root.id() != m_root.id() && m_sanity_check_min_size)
+            usql_assert(hdr->nr_item >= m_internal_merge_thresh);
+        do_sanity_check(m_page_io.lookup(hdr->ch0),
+                lower, &hdr->item(this, 0).key, expected_next_leaf);
+        for (size_t i = 0; i < hdr->nr_item; i ++) {
+            auto &&item = hdr->item(this, i);
+            const Key *next_key;
+            if (i + 1 < hdr->nr_item) {
+                next_key = &hdr->item(this, i + 1).key;
+                usql_assert(m_cmpkey(item.key, *next_key));
+            } else
+                next_key = upper;
+            check_key_range(item.key);
+            do_sanity_check(m_page_io.lookup(item.ch),
+                    &item.key, next_key, expected_next_leaf);
+        }
+    } else  {
+        auto hdr = base_hdr->as_leaf();
+        usql_assert(hdr->nr_item <= m_leaf_nr_data_slot);
+        if (root.id() != m_root.id() && m_sanity_check_min_size)
+            usql_assert(hdr->nr_item >= m_leaf_merge_thresh);
+        if (expected_next_leaf)
+            usql_assert(expected_next_leaf == root.id());
+        expected_next_leaf = hdr->next_sibling;
+        if (!expected_next_leaf)
+            expected_next_leaf = -1;
+
+        for (size_t i = 0; i < hdr->nr_item; i ++) {
+            auto &&key = hdr->item(this, i).key;
+            check_key_range(key);
+            if (i)
+                usql_assert(m_cmpkey(hdr->item(this, i - 1).key, key));
+        }
+    }
 }
 
 /* ------------------------- Iterator ------------------ */
