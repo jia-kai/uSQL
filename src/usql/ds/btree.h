@@ -1,6 +1,6 @@
 /*
  * $File: btree.h
- * $Date: Thu Nov 06 00:12:25 2014 +0800
+ * $Date: Thu Nov 06 00:19:49 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -65,9 +65,6 @@ class BTree: public PagedDataStructureBase {
          * for leaf node, item[idx - 1] < key <= item[idx]
          */
         std::pair<const LeafHeader*, uint32_t> do_lookup(const Key &key);
-
-        //! whether to check minimum node size
-        bool m_sanity_check_min_size = true; 
 
         /*!
          * \return i such that item[i] <= key < item[i+1]

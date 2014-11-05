@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Thu Nov 06 00:15:26 2014 +0800
+ * $Date: Thu Nov 06 00:19:59 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -545,7 +545,7 @@ DEF(void, do_sanity_check) (const PageIO::Page &root,
     if (base_hdr->type == PageType::INTERNAL) {
         auto hdr = base_hdr->as_internal();
         usql_assert(hdr->nr_item <= m_internal_nr_child);
-        if (root.id() != m_root.id() && m_sanity_check_min_size)
+        if (root.id() != m_root.id())
             usql_assert(hdr->nr_item >= m_internal_merge_thresh);
         do_sanity_check(m_page_io.lookup(hdr->ch0),
                 lower, &hdr->item(this, 0).key, expected_next_leaf);
@@ -564,7 +564,7 @@ DEF(void, do_sanity_check) (const PageIO::Page &root,
     } else  {
         auto hdr = base_hdr->as_leaf();
         usql_assert(hdr->nr_item <= m_leaf_nr_data_slot);
-        if (root.id() != m_root.id() && m_sanity_check_min_size)
+        if (root.id() != m_root.id())
             usql_assert(hdr->nr_item >= m_leaf_merge_thresh);
         if (expected_next_leaf)
             usql_assert(expected_next_leaf == root.id());
