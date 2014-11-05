@@ -1,6 +1,6 @@
 /*
  * $File: test_btree.cpp
- * $Date: Thu Nov 06 00:50:09 2014 +0800
+ * $Date: Thu Nov 06 00:58:16 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -79,7 +79,7 @@ class RandMap {
 
         const Key& sample() {
             usql_assert(!m_key.empty());
-            auto idx = size_t(rand() / (RAND_MAX + 1.0) * double(m_key.size()));
+            auto idx = randi(m_key.size());
             std::swap(m_key[idx], m_key.back());
             return m_key.back();
         }
@@ -148,12 +148,16 @@ TEST_F(BTreeTestEnv, rand_opr) {
             Key k{rand()};
             auto iter_expect = check.map().lower_bound(k);
             auto iter_get = m_tree->lookup(k, false);
-            if (iter_expect == check.map().end())
-                ASSERT_FALSE(iter_get.valid());
-            else {
+            for (int t = randi(TREE_INTERNAL_BRANCH * 4); t >= 0; t --) {
+                if (iter_expect == check.map().end()) {
+                    ASSERT_FALSE(iter_get.valid());
+                    break;
+                }
                 ASSERT_TRUE(iter_get.valid());
                 ASSERT_EQ(iter_expect->first.key, iter_get.key().key);
                 ASSERT_EQ(iter_expect->second, iter_get.payload());
+                iter_get.next();
+                iter_expect ++;
             }
 
             if (rand() <= RAND_MAX / 2) {
