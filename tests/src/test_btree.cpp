@@ -1,6 +1,6 @@
 /*
  * $File: test_btree.cpp
- * $Date: Thu Nov 06 00:17:41 2014 +0800
+ * $Date: Thu Nov 06 00:50:09 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -89,6 +89,14 @@ class RandMap {
             m_map.erase(m_key.back());
             m_key.pop_back();
         }
+
+        size_t size() const {
+            return m_map.size();
+        }
+
+        auto&& map() const {
+            return m_map;
+        }
 };
 
 } // annonymous namespace
@@ -125,9 +133,44 @@ TEST_F(BTreeTestEnv, erase_after_insert) {
 
     for (size_t i = 0; i < NR; i ++) {
         auto &&k = check_read(i);
-        EXPECT_TRUE(m_tree->erase(k));
+        ASSERT_TRUE(m_tree->erase(k));
         m_tree->sanity_check();
         check.remove_prev_sampled();
+    }
+}
+
+TEST_F(BTreeTestEnv, rand_opr) {
+    RandMap check;
+    const size_t NR_OPR = pow(TREE_INTERNAL_BRANCH, 10);
+    for (size_t i = 0; i < NR_OPR; i ++) {
+        bool do_insert = true;
+        if (check.size()) {
+            Key k{rand()};
+            auto iter_expect = check.map().lower_bound(k);
+            auto iter_get = m_tree->lookup(k, false);
+            if (iter_expect == check.map().end())
+                ASSERT_FALSE(iter_get.valid());
+            else {
+                ASSERT_TRUE(iter_get.valid());
+                ASSERT_EQ(iter_expect->first.key, iter_get.key().key);
+                ASSERT_EQ(iter_expect->second, iter_get.payload());
+            }
+
+            if (rand() <= RAND_MAX / 2) {
+                // rand erase, do not insert
+                do_insert = false;
+                k = check.sample();
+                ASSERT_TRUE(m_tree->erase(k));
+                check.remove_prev_sampled();
+            }
+        }
+        if (do_insert) {
+            Key k{rand()};
+            val_t v = rand();
+            check.assign(k, v);
+            m_tree->lookup(k, true).payload() = v;
+        }
+        m_tree->sanity_check();
     }
 }
 

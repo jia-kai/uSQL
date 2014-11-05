@@ -1,6 +1,6 @@
 /*
  * $File: btree.h
- * $Date: Thu Nov 06 00:19:49 2014 +0800
+ * $Date: Thu Nov 06 00:34:01 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -125,7 +125,7 @@ class TypedBTree: public BTree<Key, KeyLess> {
         {}
         
         class Iterator: public BaseIter {
-            Iterator(BaseIter &iter):
+            Iterator(const BaseIter &iter):
                 BaseIter(iter)
             {}
 

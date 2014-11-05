@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Thu Nov 06 00:19:59 2014 +0800
+ * $Date: Thu Nov 06 00:52:04 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -280,9 +280,8 @@ DEF(R, do_lookup) (const Key &key) {
         if (bhdr->type == PageType::LEAF) {
             auto lhdr = bhdr->as_leaf();
             int idx = bsearch(lhdr, key);
-            if (idx < 0 || m_cmpkey(lhdr->item(this, idx).key, key)) {
+            if (idx < 0 || m_cmpkey(lhdr->item(this, idx).key, key))
                 idx ++;
-            }
             m_lookup_hist.push_back({node, idx});
             return {lhdr, idx};
         }
@@ -324,12 +323,20 @@ DEF(CLS::Datapos, find_data_pos) (
     uint32_t idx;
     std::tie(lhdr, idx) = do_lookup(key);
     PageIO::Page tp = m_lookup_hist.back().page;
-    if (insert_on_missing && (idx >= lhdr->nr_item ||
-                m_cmpkey(key, lhdr->item(this, idx).key))) {
-        if (lhdr->nr_item == m_leaf_nr_data_slot)
-            std::tie(tp, idx) = split_last_lookup_leaf(key);
-        else
-            tp.write<LeafHeader>()->insert(this, idx).key = key;
+    if (insert_on_missing) {
+        if (idx >= lhdr->nr_item || m_cmpkey(key, lhdr->item(this, idx).key)) {
+            if (lhdr->nr_item == m_leaf_nr_data_slot)
+                std::tie(tp, idx) = split_last_lookup_leaf(key);
+            else
+                tp.write<LeafHeader>()->insert(this, idx).key = key;
+        }
+    } else {
+        if (idx == lhdr->nr_item && lhdr->next_sibling) {
+            // find next existing key
+            tp = m_page_io.lookup(lhdr->next_sibling);
+            lhdr = tp.read<LeafHeader>();
+            idx = 0;
+        }
     }
     return {tp, idx};
 }
