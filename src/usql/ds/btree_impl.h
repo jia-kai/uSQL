@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Thu Nov 06 00:52:04 2014 +0800
+ * $Date: Thu Nov 06 01:07:35 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -445,6 +445,8 @@ DEF(void, insert_internal) (size_t hist_idx, const Key &key,
 }
 
 DEF(bool, erase) (const Key &key) {
+    if (!m_root.valid())
+        return false;
     do_lookup(key);
     auto &&hist = m_lookup_hist.back();
     auto hdr = hist.page.template write<LeafHeader>();

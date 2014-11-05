@@ -1,6 +1,6 @@
 /*
  * $File: test_btree.cpp
- * $Date: Thu Nov 06 00:58:16 2014 +0800
+ * $Date: Thu Nov 06 01:05:26 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -174,8 +174,24 @@ TEST_F(BTreeTestEnv, rand_opr) {
             check.assign(k, v);
             m_tree->lookup(k, true).payload() = v;
         }
+
+        if (rand() <= RAND_MAX / 5) {
+            // check erase unexisting key
+            Key k{rand()};
+            if (check.map().find(k) == check.map().end()) {
+                ASSERT_FALSE(m_tree->erase(k));
+            }
+        }
         m_tree->sanity_check();
     }
+
+    while (check.size()) {
+        auto &&k = check.sample();
+        ASSERT_TRUE(m_tree->erase(k));
+        check.remove_prev_sampled();
+    }
+
+    ASSERT_EQ(0, m_tree_root);
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
