@@ -1,0 +1,42 @@
+% $File: midterm.tex
+% $Date: Sun Nov 16 21:33:23 2014 +0800
+% $Author: jiakai <jia.kai66@gmail.com>
+
+\documentclass[a4paper]{article}
+\usepackage[top=2in, bottom=1.5in, left=1in, right=1in]{geometry}
+
+
+% zhspacing
+\usepackage{zhspacing}
+\zhspacing
+
+\title{数据库项目中期报告}
+\author{贾开、赵一开、吴玲玲}
+
+\date{}
+\begin{document}
+\maketitle
+\section{小组分工}
+\begin{tabular}{cl}
+    贾开 & 总体架构设计和框架开发 \\
+    赵一开 & 部分模块开发 \\
+    吴玲玲 & 系统整合功能测试、正确性与效率测试、质量控制
+\end{tabular}
+
+\section{目前进度}
+使用C++14开发，googletest进行模块化的单元测试，所有框架均自行设计，
+目前实现了基于内存文件映射的页式文件存储管理、
+基于空闲表的空间分配和回收、向量存储模块(但后来发现好像没啥用)、B+ Tree模块。
+目前的代码可在linux和Mac OS等类UNIX平台下使用。
+
+\section{问题和困难}
+还没想好如何整合进一个通用的查询解析和优化模块，
+这个需要在后面的开发中进一步细化；另外页式文件存储模块还没有windows的实现，
+虽然设计和实现过程中考虑到了兼容性，但不知道在windows下最终能否正常工作。
+其它方面没遇到特别大的问题。
+
+
+\end{document}
+
+% vim: filetype=tex foldmethod=marker foldmarker=f{{{,f}}}
+
