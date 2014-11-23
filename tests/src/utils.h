@@ -1,6 +1,6 @@
 /*
  * $File: utils.h
- * $Date: Thu Nov 06 00:56:07 2014 +0800
+ * $Date: Sun Nov 23 20:18:58 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -22,6 +22,10 @@ static inline int randi(int v) {
 
 static inline size_t randi(size_t v) {
     return rand() / (RAND_MAX + 1.0) * double(v);
+}
+
+static inline size_t randi(size_t begin, size_t end) {
+    return rand() / (RAND_MAX + 1.0) * double(end - begin) + begin;
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
