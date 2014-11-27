@@ -12,7 +12,8 @@
  */
 #define GEN_SERIALIZABLE_LIST(F) \
     F(DATATYPE_INT) \
-    F(GTEST_SERIALZE)
+    F(GTEST_SERIALZE) \
+    F(GTEST_SERIALZE_NO_DESERIALIZE)
 
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}

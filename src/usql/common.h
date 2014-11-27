@@ -52,5 +52,11 @@ void __usql_log__(const char *file, const char *func, int line,
 
 }   // namespace usql
 
+#ifdef __APPLE__
+#define THREAD_LOCAL __thread
+#else
+#define THREAD_LOCAL thread_local
+#endif
+
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
 

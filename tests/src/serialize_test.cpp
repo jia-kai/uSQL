@@ -5,11 +5,15 @@
  */
 
 #include "./usql/serializable.h"
+#include "./usql/datatype/int.h"
 #include "./utils.h"
 
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <thread>
+#include <future>
+#include <vector>
 
 using namespace usql;
 
@@ -45,6 +49,7 @@ class Ser final: public Serializable {
 
         static std::unique_ptr<Serializable> deserialize(
                 const void *data, size_t length) {
+            std::this_thread::sleep_for(std::chrono::milliseconds{100});
             return std::make_unique<Ser>(data, length);
         }
 
@@ -73,6 +78,29 @@ TEST(SerializationTest, Deserialize) {
     auto ptr = dynamic_cast<Ser*>(de.get());
     EXPECT_NE(nullptr, ptr);
     EXPECT_TRUE(ptr->data() == ser.data());
+}
+
+TEST(SerializationTest, MultithreadDeserialize) {
+    // Check thread_local is working
+    Ser ser;
+    auto len = ser.get_serialize_length();
+    char ser_data[len];
+    char * _ser_data = ser_data; // Clang does not allow references to flexible arrays in lambda expressions
+    ser.serialize(ser_data);
+
+    std::vector<std::future<std::unique_ptr<Serializable>>> results;
+
+    for(int i = 0 ; i < 100 ; i += 1) {
+        results.push_back(std::async(std::launch::async, [&]{
+            return std::move(Serializable::deserialize(_ser_data, len));
+        }));
+    }
+    for(auto & result: results) {
+        auto ptr = result.get();
+        auto p = dynamic_cast<Ser *>(ptr.get());
+        EXPECT_NE(nullptr, p);
+        EXPECT_TRUE(p->data() == ser.data());
+    }
 }
 
 // vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}

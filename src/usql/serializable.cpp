@@ -27,7 +27,7 @@ void Serializable::serialize(void *dest_) {
 
 std::unique_ptr<Serializable> Serializable::deserialize(
         const void *data_, size_t length) {
-    static thread_local bool recursive_call = false;
+    static THREAD_LOCAL bool recursive_call = false;
     usql_assert(!recursive_call,
             "recursive call to Serializable::deserialize, "
             "maybe subclass forget to implement deserialize?");
