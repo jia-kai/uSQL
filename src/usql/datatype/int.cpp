@@ -1,14 +1,17 @@
-/*
- * $File: int.cpp
- * $Date: Sun Nov 23 20:24:29 2014 +0800
- * $Author: jiakai <jia.kai66@gmail.com>
- */
+/* 
+* @Author: BlahGeek
+* @Date:   2014-11-30
+* @Last Modified by:   BlahGeek
+* @Last Modified time: 2014-11-30
+*/
 
 #include "./int.h"
 
 using namespace usql;
 
-REGISTER_SERIALIZABLE(IntDataType);
+std::unique_ptr<DataBase> IntDataType::load(const void * src) {
+    int64_t v = *(const int64_t *)src;
+    return std::unique_ptr<IntData>(new IntData(v));
+}
 
-// vim: syntax=cpp.doxygen foldmethod=marker foldmarker=f{{{,f}}}
-
+REGISTER_DATATYPE(IntData)

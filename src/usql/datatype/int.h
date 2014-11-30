@@ -7,31 +7,51 @@
 #pragma once
 
 #include "./base.h"
+#include <iostream>
 
 namespace usql {
 
-class IntDataType final: public DataTypeBase {
+class IntData;
 
-    /*
-     * the length seems to be useless
-     * (https://alexander.kirk.at/2007/08/24/what-does-size-in-intsize-of-mysql-mean/)
-     * so we have nothing so serialize here
-     */
-    size_t do_get_serialize_length() const override {
-        return 0;
+class IntDataType: virtual public DataTypeBase {
+
+public:
+
+    size_t storage_size() const override {
+        return sizeof(int64_t);
     }
 
-    void do_serialize(void * /*dest*/) const override {
+    DataType type_id() const override {
+        return DataType::INT;
     }
-    
-    public:
-        TypeID type_id() const override {
-            return TypeID::DATATYPE_INT;
-        }
 
-        size_t storage_size() const override {
-            return sizeof(int);
-        }
+    std::string type_name() const override {
+        return "INT";
+    }
+
+    std::unique_ptr<DataBase> load(const void * src) override;
+
+};
+
+class IntData: public IntDataType, public DataBase  {
+
+    friend class IntDataType;
+
+private:
+    int64_t val = 0;
+    IntData(int64_t val): val(val) {} 
+
+public:
+    IntData() = default;
+    void dump(void * dest) const override {
+        int64_t * p = static_cast<int64_t *>(dest);
+        *p = val;
+    }
+
+    static bool compare(const DataBase * a, const DataBase * b) {
+        return static_cast<const IntData *>(a)->val < static_cast<const IntData *>(b)->val;
+    }
+
 };
 
 } // namespace usql
