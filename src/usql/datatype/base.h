@@ -21,7 +21,7 @@ class DataTypeBase {
 
     public:
 
-        virtual ~DataTypeBase() {};
+        virtual ~DataTypeBase() = default;
 
         /*!
          * get storage size used in each row, which must be constant regardless

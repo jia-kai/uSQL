@@ -15,6 +15,8 @@ TARGET = usql_test
 override ARGS ?= 
 
 CXX = g++ -std=c++1y
+BISON ?= bison
+FLEX ?= flex
 
 SRC_EXT = cpp
 
@@ -27,11 +29,14 @@ override OPTFLAG ?= -O2
 override CXXFLAGS += \
 	-ggdb \
 	-Wall -Wextra -Wnon-virtual-dtor -Wno-unused-parameter -Winvalid-pch \
+	-Wno-deprecated-register \
 	$(CPPFLAGS) $(OPTFLAG)
 override V ?= @
 
 CXXSOURCES = $(shell find -L src -name "*.$(SRC_EXT)")
 OBJS = $(addprefix $(BUILD_DIR)/,$(CXXSOURCES:.$(SRC_EXT)=.o))
+OBJS += $(BUILD_DIR)/src/usql/parser/sql.tab.o
+OBJS += $(BUILD_DIR)/src/usql/parser/sql.yy.o
 DEPFILES = $(OBJS:.o=.d)
 
 
@@ -67,11 +72,22 @@ $(BUILD_DIR)/gtest_main.a: $(BUILD_DIR)/gtest-all.o $(BUILD_DIR)/gtest_main.o
 	@echo "[ar] gtest_main"
 	$(V)$(AR) $(ARFLAGS) $@ $^
 
-$(BUILD_DIR)/%.o: %.$(SRC_EXT) $(GTEST_HEADERS)
+$(BUILD_DIR)/%.o: %.$(SRC_EXT) $(GTEST_HEADERS) parser scanner
 	@echo "[cxx] $< ..."
 	@mkdir -pv $(dir $@)
 	@$(CXX) $(CPPFLAGS) -MM -MT "$@" "$<"  > "$(@:.o=.d)"
 	$(V)$(CXX) -c $< -o $@ $(CXXFLAGS)
+
+# src/usql/parser/sql.tab.hpp: src/usql/parser/sql.yy
+parser: src/usql/parser/sql.tab.$(SRC_EXT) src/usql/parser/sql.yy.$(SRC_EXT)
+
+src/usql/parser/sql.tab.$(SRC_EXT): src/usql/parser/sql.yy
+	@echo "[bison] sql.tab"
+	$(V)$(BISON) -d $< -o $@
+
+src/usql/parser/sql.yy.$(SRC_EXT): src/usql/parser/sql.l
+	@echo "[flex] sql.l"
+	$(V)$(FLEX) -o $@ $<
 
 
 $(TARGET): $(OBJS) $(BUILD_DIR)/gtest_main.a
@@ -98,7 +114,7 @@ git:
 gprof:
 	OPTFLAG='-O3 -pg' LDFLAGS=-pg make -j4
 
-.PHONY: all clean clean-full run gdb git gprof
+.PHONY: all clean clean-full run gdb git gprof parser scanner
 
 # vim: ft=make
 
