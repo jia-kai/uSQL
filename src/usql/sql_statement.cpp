@@ -34,14 +34,18 @@ ostream & SQLStatement::print(ostream & stream) {
     return stream;
 }
 
-SQLStatement::SQLStatement(std::string sql, bool debug) {
+SQLStatement::SQLStatement(std::string sql) {
     origin = sql;
-    istrstream st(sql.c_str());
-    scanner = std::unique_ptr<SQLScanner>(new SQLScanner(&st));
+    st = std::unique_ptr<istrstream>(new istrstream(origin.c_str()));
+    scanner = std::unique_ptr<SQLScanner>(new SQLScanner(st.get()));
     parser = std::unique_ptr<SQLParser>(new SQLParser(*scanner, *this));
-    parser->set_debug_level(debug);
-    scanner->setDebug(debug);
-    auto ret = parser->parse();
-    if(ret != 0)
-        throw std::string("parse sql failed");
+}
+
+void SQLStatement::setDebug(bool enable) {
+    parser->set_debug_level(enable);
+    scanner->setDebug(enable);
+}
+
+int SQLStatement::parse(){
+    return parser->parse();
 }

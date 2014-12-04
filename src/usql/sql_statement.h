@@ -5,6 +5,7 @@
 #include "./datatype/base.h"
 
 #include <vector>
+#include <strstream>
 #include <map>
 #include <set>
 
@@ -19,7 +20,8 @@ class SQLStatement {
 
 private:
     std::string origin;
-    
+    std::unique_ptr<std::istrstream> st = nullptr;
+
     std::unique_ptr<SQLParser> parser = nullptr;
     std::unique_ptr<SQLScanner> scanner = nullptr;
 public:
@@ -46,7 +48,9 @@ public:
     // TODO: WHERE statement
 
 public:
-    SQLStatement(std::string sql, bool debug=false);
+    SQLStatement(std::string sql);
+    void setDebug(bool enable);
+    int parse();
     std::ostream & print(std::ostream & stream);
 };
 

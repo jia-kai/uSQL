@@ -18,7 +18,8 @@ using namespace usql;
 
 TEST(SQLParserTest, TableSchema0) {
     string sql("   CREATE TABLE xxx \t(xxx INT)\n\n");
-    SQLStatement stmt(sql, false);
+    SQLStatement stmt(sql);
+    stmt.parse();
     stmt.print(cout);
     EXPECT_TRUE(stmt.type == SQLStatement::Type::CREATE_TB);
     EXPECT_TRUE(stmt.identifier == "xxx");
@@ -28,7 +29,8 @@ TEST(SQLParserTest, TableSchema0) {
 TEST(SQLParserTest, TableSchema1) {
     string sql("   CREATE TABLE abc123 (col0 INT PRIMARY KEY,\n"
         "col1 INT UNIQUE NOT NULL, col2 VARCHAR(3), NOT NULL(col2))\n\n");
-    SQLStatement stmt(sql, false);
+    SQLStatement stmt(sql);
+    stmt.parse();
     stmt.print(cout);
     EXPECT_TRUE(stmt.type == SQLStatement::Type::CREATE_TB);
     EXPECT_TRUE(stmt.identifier == "abc123");
@@ -39,6 +41,6 @@ TEST(SQLParserTest, TableSchema1) {
 TEST(SQLParserTest, TableSchema2) {
     string sql("   CREATE TABLE abc123 (col0 INT PRIMARY KEY,\n"
         "col1 INT UNIQUE NOT NULL, col2 VARCHAR(), NOT NULL(col2))\n\n");
-    SQLStatement * stmt = nullptr;
-    EXPECT_THROW(stmt = new SQLStatement(sql), string);
+    SQLStatement stmt(sql);
+    EXPECT_NE(stmt.parse(), 0);
 }
