@@ -18,6 +18,8 @@ class SQLScanner;
 class SQLStatement {
 
 private:
+    std::string origin;
+    
     std::unique_ptr<SQLParser> parser = nullptr;
     std::unique_ptr<SQLScanner> scanner = nullptr;
 public:
@@ -44,7 +46,7 @@ public:
     // TODO: WHERE statement
 
 public:
-    SQLStatement(std::string sql);
+    SQLStatement(std::string sql, bool debug=false);
     std::ostream & print(std::ostream & stream);
 };
 

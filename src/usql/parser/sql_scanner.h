@@ -17,6 +17,7 @@ namespace usql {
 class SQLScanner: public yyFlexLexer {
 public:
     SQLScanner(std::istream * in): yyFlexLexer(in) {}
+    void setDebug(bool enable) {yy_flex_debug = enable; }
     int yylex(usql::SQLParser::semantic_type *lval) {
         yylval = lval;
         return( yylex() ); 

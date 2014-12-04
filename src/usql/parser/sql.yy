@@ -53,45 +53,46 @@
 %token <column_constraint>  COLUMN_CONSTRAINT
 
 %type <datatype>              datatype
+%type <stringdata>            column_def
 
 %token CREATE TABLE DATABASE DROP SHOW USE
 %token INT VARCHAR
 
 
-%token END
+%token END 0 "EOF"
 
 %%
 
-sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' {
-                         driver.type = usql::SQLStatement::Type::CREATE_TB;
-                         driver.identifier = *($3);
-                      }
-                    | CREATE TABLE IDENTIFIER '(' column_defs ',' column_constraints ')' {
+sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                          driver.type = usql::SQLStatement::Type::CREATE_TB;
                          driver.identifier = *($3);
                       }
                     ;
 
-column_def          : IDENTIFIER datatype COLUMN_CONSTRAINT {
-                         driver.columns.emplace_back(*($1),
-                             std::unique_ptr<usql::DataTypeBase>($2));
-                         $2 = nullptr;
-                         driver.column_constraints[*($1)].insert($3);
-                      }
-                    | IDENTIFIER datatype {
-                         driver.columns.emplace_back(*($1),
-                             std::unique_ptr<usql::DataTypeBase>($2));
-                         $2 = nullptr;
-                      }
+column_defs         : column_def 
+                    | seperate_constraint
+                    | column_defs ',' column_def
+                    | column_defs ',' seperate_constraint
                     ;
-column_defs         : | column_def ',' column_def ;
+
+column_def          : IDENTIFIER datatype {
+                         driver.columns.emplace_back(*($1),
+                             std::unique_ptr<usql::DataTypeBase>($2));
+                         $2 = nullptr;
+                         if($$) delete($$);
+                         $$ = new std::string(*($1));
+                      }
+                    | column_def COLUMN_CONSTRAINT {
+                         driver.column_constraints[*($1)].insert($2);
+                         if($$) delete($$);
+                         $$ = new std::string(*($1));
+                    }
+                    ;
 
 seperate_constraint : COLUMN_CONSTRAINT '(' IDENTIFIER ')' {
                          driver.column_constraints[*($3)].insert($1);
                       }
                     ;
-
-column_constraints  : | seperate_constraint ',' column_constraints;
 
 datatype            : INT {$$ = new usql::IntDataType(); }
                     | VARCHAR '(' INTEGER ')' {$$ = new usql::StringDataType($3);}

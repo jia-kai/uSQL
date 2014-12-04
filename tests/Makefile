@@ -87,7 +87,7 @@ src/usql/parser/sql.tab.$(SRC_EXT): src/usql/parser/sql.yy
 
 src/usql/parser/sql.yy.$(SRC_EXT): src/usql/parser/sql.l
 	@echo "[flex] sql.l"
-	$(V)$(FLEX) -o $@ $<
+	$(V)$(FLEX) -d -o $@ $<
 
 
 $(TARGET): $(OBJS) $(BUILD_DIR)/gtest_main.a
@@ -113,6 +113,8 @@ git:
 
 gprof:
 	OPTFLAG='-O3 -pg' LDFLAGS=-pg make -j4
+
+.SUFFIXES:
 
 .PHONY: all clean clean-full run gdb git gprof parser scanner
 

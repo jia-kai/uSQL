@@ -8,6 +8,7 @@
 #include "./sql_statement.h"
 #include "./datatype/base.h"
 #include <strstream>
+#include <iostream>
 #include "./common.h"
 
 #include "./parser/sql.tab.hpp"
@@ -17,6 +18,7 @@ using namespace usql;
 using namespace std;
 
 ostream & SQLStatement::print(ostream & stream) {
+    stream << "SQL: " << origin << endl;
     stream << "SQL Type:\t" << int(type) << endl;
     stream << "Identifier:\t" << identifier << endl;
     stream << "Column definitions:" << endl;
@@ -32,10 +34,13 @@ ostream & SQLStatement::print(ostream & stream) {
     return stream;
 }
 
-SQLStatement::SQLStatement(std::string sql) {
+SQLStatement::SQLStatement(std::string sql, bool debug) {
+    origin = sql;
     istrstream st(sql.c_str());
     scanner = std::unique_ptr<SQLScanner>(new SQLScanner(&st));
     parser = std::unique_ptr<SQLParser>(new SQLParser(*scanner, *this));
+    parser->set_debug_level(debug);
+    scanner->setDebug(debug);
     auto ret = parser->parse();
     if(ret != 0)
         throw std::string("parse sql failed");

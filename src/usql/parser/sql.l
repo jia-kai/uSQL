@@ -1,8 +1,12 @@
 %{
+#include <iostream>
 #include <string>
 #include "sql_scanner.h"
 #include "../datatype/base.h"
 #include "../sql_statement.h"
+
+using std::cout;
+using std::endl;
 
 using token = usql::SQLParser::token;
 
@@ -14,27 +18,16 @@ using token = usql::SQLParser::token;
 %}
 
 %option debug 
-%option nodefault 
 %option yyclass="SQLScanner" 
 %option noyywrap 
 %option c++
 
-DIGIT               = ([0-9])
-HEX_DIGIT           = ([0-9A-Fa-f])
-HEX_INTEGER         = (0[Xx]{HEX_DIGIT}+)
-DEC_INTEGER         = ({DIGIT}+)
-INTEGER             = ({HEX_INTEGER}|{DEC_INTEGER})
-FLOAT               = ({DEC_INTEGER}"."{DEC_INTEGER})
-IDENTIFIER          = ([_0-9A-Za-z]*[_A-Za-z][_0-9A-Za-z]*)
-SIMPLE_OPERATOR     = ("+"|"-"|"*"|"/"|"%"|"="|"<"|">"|"."|","|";"|"!"|"("|")"|"["|"]"|"{"|"}"|"&"|":")
-WHITESPACE          = ([ \t\n]+)
-
 %%
 
-SIMPLE_OPERATOR {return (int)yytext[0]; }
+[ \t\n]+        { }
 
-"INT"           return token::INT;
-"VARCHAR"       return token::VARCHAR;
+"INT"           { return token::INT; }
+"VARCHAR"       { return token::VARCHAR; }
 
 "PRIMARY KEY"   {
                     yylval->column_constraint = usql::SQLStatement::ColumnConstraint::PRIMARY;
@@ -49,10 +42,9 @@ SIMPLE_OPERATOR {return (int)yytext[0]; }
                     return token::COLUMN_CONSTRAINT;
                 }
 
-"CREATE"        return token::CREATE;
-"TABLE"         return token::TABLE;
+"CREATE"        { return token::CREATE; }
+"TABLE"         { return token::TABLE; }
 
-WHITESPACE      {}
 [0-9]+          {
                     yylval->intdata = atoi(yytext);
                     return token::INTEGER;
@@ -61,6 +53,8 @@ WHITESPACE      {}
                     yylval->stringdata = new std::string(yytext);
                     return token::IDENTIFIER;
                 }
+
+.               { return int(yytext[0]); }
 
 %%
 
