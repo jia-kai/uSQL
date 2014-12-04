@@ -41,7 +41,7 @@ public:
 
     // TODO: SELECT values, e.g. SUM(xx)
 
-    std::vector<std::pair<std::string, std::unique_ptr<DataTypeBase>>> columns;
+    std::vector<std::pair<std::string, std::shared_ptr<DataTypeBase>>> columns;
     std::map<std::string, std::set<ColumnConstraint>> column_constraints;
 
     std::vector<DataBase> values;

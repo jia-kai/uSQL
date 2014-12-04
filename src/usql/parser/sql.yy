@@ -77,7 +77,7 @@ column_defs         : column_def
 
 column_def          : IDENTIFIER datatype {
                          driver.columns.emplace_back(*($1),
-                             std::unique_ptr<usql::DataTypeBase>($2));
+                             std::shared_ptr<usql::DataTypeBase>($2));
                          $2 = nullptr;
                          if($$) delete($$);
                          $$ = new std::string(*($1));
