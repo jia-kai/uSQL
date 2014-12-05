@@ -40,9 +40,9 @@ public:
     virtual ~IndexBase() = default;
 
     virtual std::set<rowid_t> find(BoundType lower_bound_type,
-        const LiteralData& lower_bound,
-        BoundType upper_bound_type,
-        const LiteralData& upper_bound) = 0;
+                                   const LiteralData& lower_bound,
+                                   BoundType upper_bound_type,
+                                   const LiteralData& upper_bound) = 0;
 
     virtual bool erase(const LiteralData& key, rowid_t rowid) = 0;
     virtual void insert(const LiteralData&key, rowid_t rowid) = 0;
@@ -61,17 +61,17 @@ protected:
 
 public:
     Index(hash_t hash, 
-        PageIO &page_io, PageIO::page_id_t root, 
-        PagedDataStructureBase::root_updator_t root_updator):
+          PageIO &page_io, PageIO::page_id_t root, 
+          PagedDataStructureBase::root_updator_t root_updator):
     hash(hash) {
         index_tree = std::make_unique<IndexTree>(page_io, 0);
         index_tree->load(root, root_updator);
     }
 
     std::set<rowid_t> find(BoundType lower_bound_type,
-        const LiteralData& lower_bound,
-        BoundType upper_bound_type,
-        const LiteralData& upper_bound) override {
+                           const LiteralData& lower_bound,
+                           BoundType upper_bound_type,
+                           const LiteralData& upper_bound) override {
 
         T lower_key = (lower_bound_type == BoundType::DISABLE) ?
             (std::numeric_limits<T>::min()) : hash(lower_bound);

@@ -33,10 +33,10 @@ protected:
 public:
 
     Table(PageIO & page_io,
-        std::vector<column_def_t> cols, 
-        std::map<std::string, column_constraints_t> cons,
-        rowid_t mr,
-        rowid_updator_t updator);
+          std::vector<column_def_t> cols, 
+          std::map<std::string, column_constraints_t> cons,
+          rowid_t mr,
+          rowid_updator_t updator);
 
     // insert: target = -1 to insert new record at maxrow
     rowid_t insert(std::vector<LiteralData> values, rowid_t target = -1);
