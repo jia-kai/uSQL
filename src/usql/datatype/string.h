@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./base.h"
+#include <functional>
 
 namespace usql {
 
@@ -32,6 +33,21 @@ public:
 
     std::string type_name() const override {
         return ssprintf("VARCHAR(%zd)", max_size);
+    }
+
+public:
+
+    using hash_result_type = std::hash<std::string>::result_type;
+
+    std::unique_ptr<IndexBase> load_index(
+        PageIO &page_io, PageIO::page_id_t root, 
+        PagedDataStructureBase::root_updator_t root_updator) override {
+
+        return std::make_unique<Index<hash_result_type>>(
+            [](const LiteralData & data)->hash_result_type{
+                return std::hash<std::string>()(data.string_v);
+            },
+            page_io, root, root_updator);
     }
 
 };

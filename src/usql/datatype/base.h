@@ -7,6 +7,8 @@
 #pragma once
 
 #include "../common.h"
+#include "../ds/btree.h"
+#include <set>
 
 namespace usql {
 
@@ -25,7 +27,21 @@ public:
     LiteralData() = default;
     LiteralData(int64_t v): datatype(DataType::INT), int_v(v) {}
     LiteralData(std::string v): datatype(DataType::STRING), string_v(v) {}
+
+    bool operator == (const LiteralData & another) {
+        if(datatype != another.datatype) return false;
+        switch(datatype) {
+            case DataType::INT: return int_v == another.int_v;
+            case DataType::STRING: return string_v == another.string_v;
+            default: return false;
+        }
+        return false;
+    }
 };
+
+using indexrow_callback_t = std::function<bool(LiteralData &, rowid_t)>;
+
+class IndexBase;
 
 class DataTypeBase {
 protected:
@@ -47,6 +63,10 @@ public:
 
     LiteralData load(const void * src) const;
     void dump(void * dest, const LiteralData & data) const;
+
+    virtual std::unique_ptr<IndexBase> load_index(
+        PageIO &page_io, PageIO::page_id_t root, 
+        PagedDataStructureBase::root_updator_t root_updator) = 0;
 
 };
 

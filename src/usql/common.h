@@ -25,6 +25,8 @@ namespace usql {
 #define usql_log(fmt...) \
 	__usql_log__(__FILE__, __func__, __LINE__, fmt)
 
+using rowid_t = int64_t;
+
 /*!
  * \brief printf-like std::string constructor
  */

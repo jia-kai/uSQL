@@ -7,7 +7,10 @@
 #pragma once
 
 #include "./base.h"
+#include "../ds/btree.h"
 #include <iostream>
+
+#include "../index.h"
 
 namespace usql {
 
@@ -39,6 +42,20 @@ public:
         return "INT";
     }
 
+private:
+    using IndexTree = BTree<KeyWithRowID<int64_t>>;
+    std::unique_ptr<IndexTree> index_tree = nullptr;
+
+public:
+
+    virtual std::unique_ptr<IndexBase> load_index(
+        PageIO &page_io, PageIO::page_id_t root, 
+        PagedDataStructureBase::root_updator_t root_updator) override {
+
+        return std::make_unique<Index<int64_t>>(
+            [](const LiteralData & data)->int64_t{return data.int_v;},
+            page_io, root, root_updator);
+    }
 };
 
 } // namespace usql

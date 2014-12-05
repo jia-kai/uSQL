@@ -10,7 +10,6 @@ using namespace usql;
 
 namespace usql {
 
-using rowid_t = int64_t;
 using rowid_updator_t = std::function<void(const rowid_t)>;
 
 class Table;
