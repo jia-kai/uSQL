@@ -2,9 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2014-11-30
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-11-30
+* @Last Modified time: 2014-12-05
 */
 
+#include <string>
 #include "./usql/datatype/int.h"
 #include "./usql/datatype/string.h"
 
@@ -23,10 +24,12 @@ TEST(DataTypeTest, IntData) {
     auto pa = inttype->load(&a);
     auto pb = inttype->load(&b);
 
-    EXPECT_NE(nullptr, pa);
-    EXPECT_NE(nullptr, pb);
+    EXPECT_TRUE(pa.int_v == a);
+    EXPECT_TRUE(pb.int_v == b);
 
-    EXPECT_TRUE(DataCmp()(*pa, *pb));
+    EXPECT_TRUE(pa.datatype == DataType::INT);
+    EXPECT_TRUE(pb.datatype == DataType::INT);
+
 }
 
 TEST(DataTypeTest, StringData) {
@@ -37,13 +40,6 @@ TEST(DataTypeTest, StringData) {
     auto pb = stringtype->load(b);
     auto pc = stringtype->load(c);
 
-    EXPECT_NE(nullptr, pa);
-    EXPECT_NE(nullptr, pb);
-    EXPECT_NE(nullptr, pc);
-
-    DataCmp cmp;
-    EXPECT_FALSE(cmp(*pa, *pb));
-    EXPECT_FALSE(cmp(*pb, *pa));
-
-    EXPECT_TRUE(cmp(*pa, *pc) ^ cmp(*pc, *pa));
+    EXPECT_TRUE(pa.string_v == a);
+    EXPECT_TRUE(pc.datatype == DataType::STRING);
 }

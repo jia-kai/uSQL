@@ -16,6 +16,8 @@ namespace usql {
 class SQLParser;
 class SQLScanner;
 
+using column_def_t = std::pair<std::string, std::shared_ptr<DataTypeBase>>;
+
 class SQLStatement {
 
 private:
@@ -41,10 +43,10 @@ public:
 
     // TODO: SELECT values, e.g. SUM(xx)
 
-    std::vector<std::pair<std::string, std::shared_ptr<DataTypeBase>>> columns;
+    std::vector<column_def_t> columns;
     std::map<std::string, std::set<ColumnConstraint>> column_constraints;
 
-    std::vector<DataBase> values;
+    std::vector<LiteralData> values;
     // TODO: WHERE statement
 
 public:
@@ -53,6 +55,8 @@ public:
     int parse();
     std::ostream & print(std::ostream & stream);
 };
+
+using column_constraints_t = std::set<SQLStatement::ColumnConstraint>;
 
 }
 

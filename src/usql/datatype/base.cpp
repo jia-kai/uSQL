@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-11-30
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-11-30
+* @Last Modified time: 2014-12-05
 */
 
 #include "./base.h"
@@ -10,27 +10,15 @@
 
 using namespace usql;
 
-namespace {
-    using compare_function_map_t = std::map<DataType,
-        DataCmp::compare_function_t>;
-    compare_function_map_t * compare_function_map = nullptr;
+LiteralData DataTypeBase::load(const void * src) const {
+    auto ret = this->do_load(src);
+    ret.datatype = this->type_id();
+    return ret;
 }
 
-bool DataCmp::operator () (const DataBase & a, const DataBase & b) const {
-    DataType typea = a.type_id();
-    DataType typeb = b.type_id();
-    usql_assert(typea == typeb, 
-        "cannot compare two data with different typeid: %d <-> %d",
-        int(typea), int(typeb));
-    auto iter = compare_function_map->find(typea);
-    usql_assert(iter != compare_function_map->end(),
-        "failed to find compare function for typeid: %d", int(typea));
-    return iter->second(&a, &b);
-}
-
-void DataCmp::register_datatype(DataType type_id, compare_function_t compare_f) {
-    if(!compare_function_map)
-        compare_function_map = new compare_function_map_t;
-    auto rst = compare_function_map->insert({type_id, compare_f});
-    usql_assert(rst.second, "type id %d already exists", int(type_id));
+void DataTypeBase::dump(void * dest, const LiteralData & data) const {
+    usql_assert(data.datatype == this->type_id(),
+        "type id of data to dump does not match: %d vs %d", 
+        int(data.datatype), this->type_id());
+    this->do_dump(dest, data);
 }

@@ -11,9 +11,19 @@
 
 namespace usql {
 
-class IntData;
-
 class IntDataType: virtual public DataTypeBase {
+
+protected:
+    LiteralData do_load(const void * src) const override{
+        LiteralData ret;
+        ret.int_v = *(const int64_t *)src;
+        return ret;
+    }
+
+    void do_dump(void * dest, const LiteralData & data) const override{
+        int64_t * p = static_cast<int64_t *>(dest);
+        *p = data.int_v;
+    }
 
 public:
 
@@ -27,29 +37,6 @@ public:
 
     std::string type_name() const override {
         return "INT";
-    }
-
-    std::unique_ptr<DataBase> load(const void * src) override;
-
-};
-
-class IntData: public IntDataType, public DataBase  {
-
-    friend class IntDataType;
-
-private:
-    int64_t val = 0;
-    IntData(int64_t val): val(val) {} 
-
-public:
-    IntData() = default;
-    void dump(void * dest) const override {
-        int64_t * p = static_cast<int64_t *>(dest);
-        *p = val;
-    }
-
-    static bool compare(const DataBase * a, const DataBase * b) {
-        return static_cast<const IntData *>(a)->val < static_cast<const IntData *>(b)->val;
     }
 
 };

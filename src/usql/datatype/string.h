@@ -4,11 +4,19 @@
 
 namespace usql {
 
-class StringData;
-
 class StringDataType: virtual public DataTypeBase {
 protected:
-    size_t max_size = 0;
+    size_t max_size = 256;
+
+    LiteralData do_load(const void * src) const override {
+        LiteralData ret;
+        ret.string_v = std::string(static_cast<const char *>(src), 0, max_size);
+        return ret;
+    }
+
+    void do_dump(void * dest, const LiteralData & data) const override{
+        strncpy(static_cast<char *>(dest), data.string_v.c_str(), max_size);
+    }
 
 public:
     StringDataType() = default;
@@ -26,28 +34,8 @@ public:
         return ssprintf("VARCHAR(%zd)", max_size);
     }
 
-    std::unique_ptr<DataBase> load(const void * src) override;
-
 };
 
-class StringData: public DataBase, public StringDataType {
-    friend class StringDataType;
-private:
-    std::string val;
-    StringData(std::string val): val(val) {}
-
-public:
-    StringData() = default;
-
-    void dump(void * dest) const override {
-        strncpy(static_cast<char *>(dest), val.c_str(), max_size);
-    }
-
-    static bool compare(const DataBase * a, const DataBase * b) {
-        #define HASH(x) (std::hash<std::string>()(x))
-        return HASH(static_cast<const StringData *>(a)->val) < HASH(static_cast<const StringData *>(b)->val);
-    }
-};
 
 }
 
