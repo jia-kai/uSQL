@@ -31,11 +31,14 @@ Table::Table(PageIO & page_io,
 
 }
 
-rowid_t Table::insert(std::vector<LiteralData> values) {
-    auto it = this->lookup(maxrow, true); // insert rowid = maxrow
-    maxrow += 1;
-    if(maxrow_updator != nullptr)
-        maxrow_updator(maxrow);
+rowid_t Table::insert(std::vector<LiteralData> values, rowid_t target) {
+    if(target == -1) {
+        target = maxrow;
+        maxrow += 1;
+        if(maxrow_updator != nullptr)
+            maxrow_updator(maxrow);
+    }
+    auto it = this->lookup(target, true);
     char * pdata = static_cast<char *>(it.payload());
 
     for(size_t i = 0 ; i < columns.size() ; i += 1) {
@@ -46,17 +49,32 @@ rowid_t Table::insert(std::vector<LiteralData> values) {
     return it.key();
 }
 
-std::vector<LiteralData> Table::find(rowid_t rowid) {
+std::vector<LiteralData> Table::load_data(Table::Iterator & it) {
+    usql_assert(it.valid(), "iterator invalid");
     std::vector<LiteralData> ret;
-    auto it = this->lookup(rowid, false);
-    if(!it.valid() || it.key() != rowid) 
-        return ret;
 
     char * pdata = static_cast<char *>(it.payload());
     for(size_t i = 0 ; i < columns.size() ; i += 1) {
         ret.push_back(columns[i].second->load(pdata));
         pdata += columns[i].second->storage_size();
     }
-
     return std::move(ret);
+}
+
+std::vector<LiteralData> Table::find(rowid_t rowid) {
+    auto it = this->lookup(rowid, false);
+    if(!it.valid() || it.key() != rowid) 
+        return std::vector<LiteralData>();
+
+    return load_data(it);
+}
+
+void Table::walkthrough(row_callback_t callback) {
+    auto it = this->lookup(0, false);
+    while(it.valid()) {
+        auto continue_ = callback(*this, load_data(it));
+        if(!continue_)
+            break;
+        it.next();
+    }
 }

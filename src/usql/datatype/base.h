@@ -14,13 +14,18 @@ enum class DataType {
     INT, STRING,
 };
 
-typedef struct {
+class LiteralData {
+public:
     // Do not use union because we dont want to use std::string * str
     DataType datatype;
 
     int64_t int_v;
     std::string string_v;
-} LiteralData;
+
+    LiteralData() = default;
+    LiteralData(int64_t v): datatype(DataType::INT), int_v(v) {}
+    LiteralData(std::string v): datatype(DataType::STRING), string_v(v) {}
+};
 
 class DataTypeBase {
 protected:
