@@ -16,6 +16,17 @@ enum class DataType {
     INT, STRING,
 };
 
+#define DEF_OP(op) \
+    bool operator op (const LiteralData & another) const { \
+        if(datatype != another.datatype) return false; \
+        switch(datatype) { \
+            case DataType::INT: return int_v op another.int_v; \
+            case DataType::STRING: return string_v op another.string_v; \
+            default: return false; \
+        } \
+        return false; \
+    } 
+
 class LiteralData {
 public:
     // Do not use union because we dont want to use std::string * str
@@ -25,19 +36,20 @@ public:
     std::string string_v;
 
     LiteralData() = default;
+    LiteralData(const LiteralData & another) = default;
     LiteralData(int64_t v): datatype(DataType::INT), int_v(v) {}
     LiteralData(std::string v): datatype(DataType::STRING), string_v(v) {}
 
-    bool operator == (const LiteralData & another) {
-        if(datatype != another.datatype) return false;
-        switch(datatype) {
-            case DataType::INT: return int_v == another.int_v;
-            case DataType::STRING: return string_v == another.string_v;
-            default: return false;
-        }
-        return false;
-    }
+    DEF_OP(==)
+    DEF_OP(!=)
+    DEF_OP(<)
+    DEF_OP(>)
+    DEF_OP(>=)
+    DEF_OP(<=)
+
 };
+
+#undef DEF_OP
 
 using indexrow_callback_t = std::function<bool(LiteralData &, rowid_t)>;
 
