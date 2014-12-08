@@ -56,6 +56,7 @@
 %type <stringdata>            column_def
 
 %token CREATE TABLE DATABASE DROP SHOW USE
+%token FROM SELECT WHERE
 %token INT VARCHAR
 
 
@@ -67,7 +68,17 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                          driver.type = usql::SQLStatement::Type::CREATE_TB;
                          driver.table_names.push_back(*($3));
                       }
+                    | SELECT select_vals FROM tables WHERE where_statement END {
+                        driver.type = usql::SQLStatement::Type::SELECT;
+                    }
                     ;
+
+select_vals         : '*' ;
+
+tables              : IDENTIFIER { driver.table_names.push_back(*($1)); }
+                    | tables ',' IDENTIFIER { driver.table_names.push_back(*($3)); }
+                    ;
+where_statement     : ;
 
 column_defs         : column_def 
                     | seperate_constraint
