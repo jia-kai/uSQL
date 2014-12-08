@@ -65,7 +65,7 @@
 
 sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                          driver.type = usql::SQLStatement::Type::CREATE_TB;
-                         driver.identifier = *($3);
+                         driver.table_names.push_back(*($3));
                       }
                     ;
 
@@ -73,10 +73,11 @@ column_defs         : column_def
                     | seperate_constraint
                     | column_defs ',' column_def
                     | column_defs ',' seperate_constraint
+                    | column_defs ','
                     ;
 
 column_def          : IDENTIFIER datatype {
-                         driver.columns.emplace_back(*($1),
+                         driver.column_defs.emplace_back(*($1),
                              std::shared_ptr<usql::DataTypeBase>($2));
                          $2 = nullptr;
                          if($$) delete($$);
@@ -102,7 +103,7 @@ datatype            : INT {$$ = new usql::IntDataType(); }
 %%
 
 void usql::SQLParser::error(const std::string & msg) {
-    std::cerr << "Error: " << msg << std::endl;
+//    std::cerr << "Error: " << msg << std::endl;
 }
 
 /* include for access to scanner.yylex */

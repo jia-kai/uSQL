@@ -3,6 +3,7 @@
 
 #include "./common.h"
 #include "./datatype/base.h"
+#include "./where_statement.h"
 
 #include <vector>
 #include <strstream>
@@ -33,21 +34,28 @@ public:
         SHOW_TBS, CREATE_TB, DROP_TB, DESC_TB,
         INSERT, DELETE, UPDATE,
         CREATE_IDX, DROP_IDX,
+        SELECT,
     };
     enum class ColumnConstraint {
         PRIMARY, NOT_NULL, UNIQUE
     };
 
     Type type;
-    std::string identifier;
+
+    std::string database_name; // for *_DB
+
+    std::vector<std::string> table_names; // for *_TB, delete, update, *_IDX, select
 
     // TODO: SELECT values, e.g. SUM(xx)
 
-    std::vector<column_def_t> columns;
-    std::map<std::string, std::set<ColumnConstraint>> column_constraints;
+    std::vector<column_def_t> column_defs; // for create_tb
+    std::map<std::string, std::set<ColumnConstraint>> column_constraints; // for create_tb
 
-    std::vector<LiteralData> values;
-    // TODO: WHERE statement
+    std::vector<std::vector<LiteralData>> values; // for insert
+
+    std::map<std::string, LiteralData> update_vals; // for update
+
+    std::unique_ptr<WhereStatement> where_stmt = nullptr; // for delete, update, select
 
 public:
     SQLStatement(std::string sql);
