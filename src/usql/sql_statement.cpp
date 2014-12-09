@@ -19,8 +19,6 @@ using namespace std;
 
 ostream & SQLStatement::print(ostream & stream) {
     bool first_enter = true;
-    stream << "Original: " << origin << endl;
-    stream << "Parsed:   " ;
     switch(type) {
         case SQLStatement::Type::CREATE_DB:
             stream << "CREATE DATABASE " << database_name;
@@ -76,7 +74,6 @@ ostream & SQLStatement::print(ostream & stream) {
             stream << "NOT IMPLEMENTED";
             break;
     }
-    stream << endl;
     return stream;
 }
 

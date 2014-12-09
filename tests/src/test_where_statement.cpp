@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-07
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-07
+* @Last Modified time: 2014-12-09
 */
 
 #include "./page_io_env.h"
@@ -14,6 +14,7 @@
 #include "usql/datatype/int.h"
 #include "usql/datatype/string.h"
 #include "usql/where_statement.h"
+#include "usql/sql_statement.h"
 
 #include <map>
 
@@ -64,55 +65,15 @@ protected:
 
 
 TEST_F(WhereStatementTest, basic_filter_test) {
-    // 42 = t1.c2 and t2.c1 <= 10 
-    // and (1 < t2.c1 or t1.c2 >= 999)
-    // and not (t2.c1 >= 9)
-    auto where_stmt = std::make_unique<WhereStatement>();
-    where_stmt->type = WhereStatement::WhereStatementType::AND;
-
-    auto tmp = std::make_unique<WhereStatement>();
-    tmp->a = LiteralData(42);
-    tmp->b_is_literal = false;
-    tmp->nb = ColumnAndTableName("t1", "c2");
-    where_stmt->children.push_back(std::move(tmp));
-
-    tmp = std::make_unique<WhereStatement>();
-    tmp->op = WhereStatement::WhereStatementOperator::LE;
-    tmp->a_is_literal = false;
-    tmp->na = ColumnAndTableName("t2", "c1");
-    tmp->b = LiteralData(10);
-    where_stmt->children.push_back(std::move(tmp));
-
-    auto xxx = std::make_unique<WhereStatement>();
-    xxx->type = WhereStatement::WhereStatementType::OR;
-
-    tmp = std::make_unique<WhereStatement>();
-    tmp->op = WhereStatement::WhereStatementOperator::LE;
-    tmp->a = LiteralData(1);
-    tmp->b_is_literal = false;
-    tmp->nb = ColumnAndTableName("t2", "c1");
-    xxx->children.push_back(std::move(tmp));
-
-    tmp = std::make_unique<WhereStatement>();
-    tmp->op = WhereStatement::WhereStatementOperator::GE;
-    tmp->a_is_literal = false;
-    tmp->na = ColumnAndTableName("t1", "c2");
-    tmp->b = LiteralData(999);
-    xxx->children.push_back(std::move(tmp));
-
-    where_stmt->children.push_back(std::move(xxx));
-
-    xxx = std::make_unique<WhereStatement>();
-    xxx->type = WhereStatement::WhereStatementType::NOT;
-
-    tmp = std::make_unique<WhereStatement>();
-    tmp->op = WhereStatement::WhereStatementOperator::GE;
-    tmp->a_is_literal = false;
-    tmp->na = ColumnAndTableName("t2", "c1");
-    tmp->b = LiteralData(9);
-    xxx->children.push_back(std::move(tmp));
-
-    where_stmt->children.push_back(std::move(xxx));
+    std::string sql("SELECT * FROM t1, t2 WHERE\n"
+               "t1.c2 = 42 and t2.c1 <= 10\n"
+               "and (1 < t2.c1 or t1.c2 >= 999)\n"
+               "and not (t2.c1 >= 9 and t2.c1 >= 8)\n "
+               "and (((1>1)or(1<1)or(2!=1)) and t1.c2 < t2.c1)\n"
+               "and not t1.c1 > 0\n");
+    SQLStatement stmt(sql);
+    EXPECT_EQ(stmt.parse(), 0);
+    auto & where_stmt = stmt.where_stmt;
 
     where_stmt->normalize();
     auto ret = where_stmt->filter(rows, indexes);

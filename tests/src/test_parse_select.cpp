@@ -12,16 +12,22 @@
 
 #include <string>
 #include <gtest/gtest.h>
+#include <strstream>
 
 using namespace std;
 using namespace usql;
 
 TEST(SQLParserTest, where_statement) {
-    string sql("SELECT * FROM xxx WHERE 1 = 1");
+    std::ostrstream out;
+    string sql("SELECT * FROM xxx,yyy,xyz,xxx \n"
+               "WHERE (1 = 1 OR 1 > 2) OR (xxx.col1 > 3 AND xxx.col1 <= 10)\n"
+               "OR NOT (xxx.col1 != 122 AND (yyy.col2 = 7 OR yyy.col2 = xxx.col3))");
     SQLStatement stmt(sql);
     stmt.parse();
-    stmt.print(cout);
-    // EXPECT_TRUE(stmt.type == SQLStatement::Type::CREATE_TB);
-    // EXPECT_TRUE(stmt.table_names[0] == "xxx");
-    // EXPECT_TRUE(stmt.column_defs.size() == 1);
+    stmt.print(out);
+    cout << endl;
+    EXPECT_EQ(out.str(), std::string("SELECT * FROM xxx, yyy, xyz, xxx "
+              "WHERE (((1 = 1) OR (1 > 2)) OR ((xxx.col1 > 3) AND "
+              "(xxx.col1 <= 10))) OR (NOT ((xxx.col1 != 122) AND "
+              "((yyy.col2 = 7) OR (yyy.col2 = xxx.col3))))"));
 }

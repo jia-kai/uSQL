@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-08
+* @Last Modified time: 2014-12-09
 */
 
 #include <iostream>
@@ -21,6 +21,7 @@ TEST(SQLParserTest, TableSchema0) {
     SQLStatement stmt(sql);
     stmt.parse();
     stmt.print(cout);
+    cout << endl;
     EXPECT_TRUE(stmt.type == SQLStatement::Type::CREATE_TB);
     EXPECT_TRUE(stmt.table_names[0] == "xxx");
     EXPECT_TRUE(stmt.column_defs.size() == 1);
@@ -32,6 +33,7 @@ TEST(SQLParserTest, TableSchema1) {
     SQLStatement stmt(sql);
     stmt.parse();
     stmt.print(cout);
+    cout << endl;
     EXPECT_TRUE(stmt.type == SQLStatement::Type::CREATE_TB);
     EXPECT_TRUE(stmt.table_names[0] == "abc123");
     EXPECT_TRUE(stmt.column_defs[2].second->type_name() == "VARCHAR(3)");

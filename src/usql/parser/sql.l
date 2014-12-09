@@ -24,58 +24,59 @@ using token = usql::SQLParser::token;
 
 %%
 
-[ \t\n]+        { }
+[ \t\n]+            { }
 
-"INT"           { return token::INT; }
-"VARCHAR"       { return token::VARCHAR; }
+(?i:"INT")          { return token::INT; }
+(?i:"VARCHAR")      { return token::VARCHAR; }
 
-"PRIMARY KEY"   {
-                    yylval->column_constraint = usql::SQLStatement::ColumnConstraint::PRIMARY;
-                    return token::COLUMN_CONSTRAINT;
-                }
-"NOT NULL"      {
-                    yylval->column_constraint = usql::SQLStatement::ColumnConstraint::NOT_NULL;
-                    return token::COLUMN_CONSTRAINT;
-                }
-"UNIQUE"        {
-                    yylval->column_constraint = usql::SQLStatement::ColumnConstraint::UNIQUE;
-                    return token::COLUMN_CONSTRAINT;
-                }
+(?i:"PRIMARY KEY")  {
+                        yylval->column_constraint = usql::SQLStatement::ColumnConstraint::PRIMARY;
+                        return token::COLUMN_CONSTRAINT;
+                    }
+(?i:"NOT NULL")     {
+                        yylval->column_constraint = usql::SQLStatement::ColumnConstraint::NOT_NULL;
+                        return token::COLUMN_CONSTRAINT;
+                    }
+(?i:"UNIQUE")       {
+                        yylval->column_constraint = usql::SQLStatement::ColumnConstraint::UNIQUE;
+                        return token::COLUMN_CONSTRAINT;
+                    }
 
-"CREATE"        { return token::CREATE; }
-"TABLE"         { return token::TABLE; }
+(?i:"CREATE")       { return token::CREATE; }
+(?i:"TABLE")        { return token::TABLE; }
 
-"SELECT"        { return token::SELECT; }
-"FROM"          { return token::FROM; }
-"WHERE"         { return token::WHERE; }
+(?i:"SELECT")       { return token::SELECT; }
+(?i:"FROM")         { return token::FROM; }
+(?i:"WHERE")        { return token::WHERE; }
 
-"AND"           { return token::AND; }
-"OR"            { return token::OR; }
-"NOT"           { return token::NOT; }
+(?i:"AND")          { return token::AND; }
+(?i:"OR")           { return token::OR; }
+(?i:"NOT")          { return token::NOT; }
 
-">="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GE; return token::WHERE_OP; }
-"<="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LE; return token::WHERE_OP; }
-"!="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::NE; return token::WHERE_OP; }
-">"             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GT; return token::WHERE_OP; }
-"<"             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LT; return token::WHERE_OP; }
-"="             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
+">="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GE; return token::WHERE_OP; }
+"<="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LE; return token::WHERE_OP; }
+"!="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::NE; return token::WHERE_OP; }
+">"                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GT; return token::WHERE_OP; }
+"<"                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LT; return token::WHERE_OP; }
+"="                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
 
-[0-9]+          {
-                    yylval->intdata = atoi(yytext);
-                    return token::INTEGER;
-                }
-[a-zA-Z0-9]+    {
-                    yylval->stringdata = new std::string(yytext);
-                    return token::IDENTIFIER;
-                }
-\"(\\.|[^"])*\" {   
-                    std::string tmp(yytext);
-                    yylval->stringdata = new std::string();
-                    *(yylval->stringdata) = tmp.substr(1, tmp.length() - 2);
-                    return token::LITERAL_STRING;
-                }
+[0-9]+              {
+                        yylval->intdata = atoi(yytext);
+                        return token::INTEGER;
+                    }
+[a-zA-Z0-9]+        {
+                        yylval->stringdata = new std::string(yytext);
+                        return token::IDENTIFIER;
+                    }
+\"(\\.|[^"])*\"     {   
+                        std::string tmp(yytext);
+                        yylval->stringdata = new std::string();
+                        // FIXME
+                        *(yylval->stringdata) = tmp.substr(1, tmp.length() - 2);
+                        return token::LITERAL_STRING;
+                    }
 
-.               { return int(yytext[0]); }
+.                   { return int(yytext[0]); }
 
 %%
 

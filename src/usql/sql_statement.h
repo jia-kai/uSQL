@@ -22,7 +22,6 @@ using column_def_t = std::pair<std::string, std::shared_ptr<DataTypeBase>>;
 class SQLStatement {
 
 private:
-    std::string origin;
     std::unique_ptr<std::istrstream> st = nullptr;
 
     std::unique_ptr<SQLParser> parser = nullptr;
@@ -62,6 +61,8 @@ public:
     void setDebug(bool enable);
     int parse();
     std::ostream & print(std::ostream & stream);
+    
+    std::string origin;
 };
 
 using column_constraints_t = std::set<SQLStatement::ColumnConstraint>;
