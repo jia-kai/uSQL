@@ -81,6 +81,8 @@
 
 %token INT VARCHAR
 
+%left ','
+
 
 %token END 0 "EOF"
 
@@ -94,9 +96,16 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                         driver.type = usql::SQLStatement::Type::SELECT;
                         driver.where_stmt = std::unique_ptr<usql::WhereStatement>($6); $6 = nullptr;
                     }
+                    | SELECT select_vals FROM tables END {
+                        driver.type = usql::SQLStatement::Type::SELECT;
+                        driver.where_stmt = nullptr;
+                    }
                     ;
 
-select_vals         : '*' ;
+select_vals         : '*' { driver.select_vals.push_back(std::pair<std::string, std::string>("*", "*")); }
+                    | column_and_table { driver.select_vals.push_back(*($1)); }
+                    | select_vals ',' column_and_table { driver.select_vals.push_back(*($3)); }
+                    ;
 
 tables              : IDENTIFIER { driver.table_names.push_back(*($1)); }
                     | tables ',' IDENTIFIER { driver.table_names.push_back(*($3)); }

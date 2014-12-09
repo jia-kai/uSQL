@@ -60,7 +60,12 @@ ostream & SQLStatement::print(ostream & stream) {
             stream << "DESCRIBE TABLE " << table_names[0];
             break;
         case SQLStatement::Type::SELECT:
-            stream << "SELECT * FROM ";
+            stream << "SELECT ";
+            for(size_t i = 0 ; i < select_vals.size() ; i += 1) {
+                if (i != 0) stream << ", ";
+                stream << select_vals[i].first << "." << select_vals[i].second ;
+            }
+            stream << " FROM ";
             for(size_t i = 0 ; i < table_names.size() ; i += 1) {
                 if(i != 0) stream << ", ";
                 stream << table_names[i];

@@ -64,7 +64,7 @@ protected:
 };
 
 
-TEST_F(WhereStatementTest, basic_filter_test) {
+TEST_F(WhereStatementTest, parse_and_filter) {
     std::string sql("SELECT * FROM t1, t2 WHERE\n"
                "t1.c2 = 42 and t2.c1 <= 10\n"
                "and (1 < t2.c1 or t1.c2 >= 999)\n"
@@ -74,6 +74,63 @@ TEST_F(WhereStatementTest, basic_filter_test) {
     SQLStatement stmt(sql);
     EXPECT_EQ(stmt.parse(), 0);
     auto & where_stmt = stmt.where_stmt;
+
+    where_stmt->normalize();
+    auto ret = where_stmt->filter(rows, indexes);
+    EXPECT_EQ(100, ret["t1"].size());
+    EXPECT_EQ(9, ret["t2"].size());
+}
+
+TEST_F(WhereStatementTest, basic_filter_test) {
+    // 42 = t1.c2 and t2.c1 <= 10 
+    // and (1 < t2.c1 or t1.c2 >= 999)
+    // and not (t2.c1 >= 9)
+    auto where_stmt = std::make_unique<WhereStatement>();
+    where_stmt->type = WhereStatement::WhereStatementType::AND;
+  
+    auto tmp = std::make_unique<WhereStatement>();
+    tmp->a = LiteralData(42);
+    tmp->b_is_literal = false;
+    tmp->nb = ColumnAndTableName("t1", "c2");
+    where_stmt->children.push_back(std::move(tmp));
+  
+    tmp = std::make_unique<WhereStatement>();
+    tmp->op = WhereStatement::WhereStatementOperator::LE;
+    tmp->a_is_literal = false;
+    tmp->na = ColumnAndTableName("t2", "c1");
+    tmp->b = LiteralData(10);
+    where_stmt->children.push_back(std::move(tmp));
+  
+    auto xxx = std::make_unique<WhereStatement>();
+    xxx->type = WhereStatement::WhereStatementType::OR;
+  
+    tmp = std::make_unique<WhereStatement>();
+    tmp->op = WhereStatement::WhereStatementOperator::LE;
+    tmp->a = LiteralData(1);
+    tmp->b_is_literal = false;
+    tmp->nb = ColumnAndTableName("t2", "c1");
+    xxx->children.push_back(std::move(tmp));
+  
+    tmp = std::make_unique<WhereStatement>();
+    tmp->op = WhereStatement::WhereStatementOperator::GE;
+    tmp->a_is_literal = false;
+    tmp->na = ColumnAndTableName("t1", "c2");
+    tmp->b = LiteralData(999);
+    xxx->children.push_back(std::move(tmp));
+  
+    where_stmt->children.push_back(std::move(xxx));
+  
+    xxx = std::make_unique<WhereStatement>();
+    xxx->type = WhereStatement::WhereStatementType::NOT;
+  
+    tmp = std::make_unique<WhereStatement>();
+    tmp->op = WhereStatement::WhereStatementOperator::GE;
+    tmp->a_is_literal = false;
+    tmp->na = ColumnAndTableName("t2", "c1");
+    tmp->b = LiteralData(9);
+    xxx->children.push_back(std::move(tmp));
+  
+    where_stmt->children.push_back(std::move(xxx));
 
     where_stmt->normalize();
     auto ret = where_stmt->filter(rows, indexes);

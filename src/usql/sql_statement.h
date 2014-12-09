@@ -45,7 +45,7 @@ public:
 
     std::vector<std::string> table_names; // for *_TB, delete, update, *_IDX, select
 
-    // TODO: SELECT values, e.g. SUM(xx)
+    std::vector<ColumnAndTableName> select_vals;
 
     std::vector<column_def_t> column_defs; // for create_tb
     std::map<std::string, std::set<ColumnConstraint>> column_constraints; // for create_tb
