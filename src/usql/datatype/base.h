@@ -9,6 +9,7 @@
 #include "../common.h"
 #include "../ds/btree.h"
 #include <set>
+#include <iostream>
 
 namespace usql {
 
@@ -46,6 +47,15 @@ public:
     DEF_OP(>)
     DEF_OP(>=)
     DEF_OP(<=)
+
+    std::ostream & print(std::ostream & stream) const {
+        switch(datatype) {
+            case DataType::INT: stream << int_v ; break; 
+            case DataType::STRING: stream << string_v ; break;
+            default: break;
+        }
+        return stream;
+    }
 
 };
 

@@ -5,6 +5,7 @@
 #include "./datatype/base.h"
 #include <map>
 #include <utility>
+#include <iostream>
 
 using namespace usql;
 
@@ -44,6 +45,8 @@ public:
 
     using table_rows_map_t = std::map<std::string, std::set<rowid_t>>;
     using index_map_t = std::map<ColumnAndTableName, std::unique_ptr<IndexBase>>;
+
+    std::ostream & print(std::ostream & stream) const;
 
     table_rows_map_t filter(table_rows_map_t & rows,
                             index_map_t & indexes);

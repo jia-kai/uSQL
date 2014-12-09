@@ -45,6 +45,21 @@ using token = usql::SQLParser::token;
 "CREATE"        { return token::CREATE; }
 "TABLE"         { return token::TABLE; }
 
+"SELECT"        { return token::SELECT; }
+"FROM"          { return token::FROM; }
+"WHERE"         { return token::WHERE; }
+
+"AND"           { return token::AND; }
+"OR"            { return token::OR; }
+"NOT"           { return token::NOT; }
+
+">="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GE; return token::WHERE_OP; }
+"<="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LE; return token::WHERE_OP; }
+"!="            { yylval->where_op = usql::WhereStatement::WhereStatementOperator::NE; return token::WHERE_OP; }
+">"             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GT; return token::WHERE_OP; }
+"<"             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LT; return token::WHERE_OP; }
+"="             { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
+
 [0-9]+          {
                     yylval->intdata = atoi(yytext);
                     return token::INTEGER;
@@ -52,6 +67,12 @@ using token = usql::SQLParser::token;
 [a-zA-Z0-9]+    {
                     yylval->stringdata = new std::string(yytext);
                     return token::IDENTIFIER;
+                }
+\"(\\.|[^"])*\" {   
+                    std::string tmp(yytext);
+                    yylval->stringdata = new std::string();
+                    *(yylval->stringdata) = tmp.substr(1, tmp.length() - 2);
+                    return token::LITERAL_STRING;
                 }
 
 .               { return int(yytext[0]); }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-08
+* @Last Modified time: 2014-12-09
 */
 
 #include "./sql_statement.h"
@@ -60,6 +60,17 @@ ostream & SQLStatement::print(ostream & stream) {
             break;
         case SQLStatement::Type::DESC_TB:
             stream << "DESCRIBE TABLE " << table_names[0];
+            break;
+        case SQLStatement::Type::SELECT:
+            stream << "SELECT * FROM ";
+            for(size_t i = 0 ; i < table_names.size() ; i += 1) {
+                if(i != 0) stream << ", ";
+                stream << table_names[i];
+            }
+            if(where_stmt) {
+                stream << " WHERE ";
+                where_stmt->print(stream);
+            }
             break;
         default:
             stream << "NOT IMPLEMENTED";

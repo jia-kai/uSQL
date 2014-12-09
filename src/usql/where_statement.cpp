@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-07
+* @Last Modified time: 2014-12-09
 */
 
 #include <iostream>
@@ -15,6 +15,52 @@
 using namespace usql;
 
 const rowid_t WhereStatement::INCLUDE_ALL = -2;
+
+std::ostream & WhereStatement::print(std::ostream & stream) const {
+    if(type == WhereStatement::WhereStatementType::LEAF) {
+        if(a_is_literal) a.print(stream);
+        else stream << na.first << "." << na.second;
+
+        stream << " ";
+        switch(op) {
+            #define DEF(sym, op) \
+                case WhereStatement::WhereStatementOperator::sym:\
+                    stream << #op ; break;
+            DEF(EQ, =)
+            DEF(NE, !=)
+            DEF(GT, >)
+            DEF(LT, <)
+            DEF(GE, >=)
+            DEF(LE, <=)
+            #undef DEF 
+            default: stream << "UNKNOWN";
+        }
+        stream << " ";
+
+        if(b_is_literal) b.print(stream);
+        else stream << nb.first << "." << nb.second;
+        return stream;
+    }
+    if(type == WhereStatement::WhereStatementType::PASS)
+        return children[0]->print(stream);
+    if(type == WhereStatement::WhereStatementType::NOT) {
+        stream << "NOT (";
+        children[0]->print(stream);
+        stream << ")";
+        return stream;
+    }
+    std::string op;
+    if(type == WhereStatement::WhereStatementType::AND)
+        op = "AND";
+    else op = "OR";
+    for(size_t i = 0 ; i < children.size() ; i += 1) {
+        if(i != 0)
+            stream << " " << op << " ";
+        auto & child = children[i];
+        stream << "("; child->print(stream); stream << ")";
+    }
+    return stream;
+}
 
 bool WhereStatement::verify_leaf() const {
     switch(this->op) {
