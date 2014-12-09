@@ -30,6 +30,7 @@
     #include "../datatype/int.h"
     #include "../datatype/string.h"
     #include "../sql_statement.h"
+    #include "../where_statement.h"
 
     /* this is silly, but I can't figure out a way around */
     static int yylex(usql::SQLParser::semantic_type *yylval,
@@ -45,6 +46,7 @@
     usql::LiteralData * literal_data;
     usql::WhereStatement::WhereStatementOperator where_op;
     usql::WhereStatement * where_stmt;
+    ColumnAndTableName * column_and_table;
     int64_t intdata;
     std::string * stringdata;
 }
@@ -52,6 +54,7 @@
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <stringdata>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <literal_data>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <where_stmt>
+%destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <column_and_table>
 
 %token <stringdata>    IDENTIFIER
 %token <intdata>       INTEGER
@@ -60,6 +63,7 @@
 
 %type <literal_data> literal_data
 %type <where_stmt> where_stmt
+%type <column_and_table> column_and_table
 
 %type <datatype>              datatype
 %type <stringdata>            column_def
@@ -103,25 +107,25 @@ where_stmt          : literal_data WHERE_OP literal_data {
                         $$->op = $2;
                         $$->a = *($1); $$->b = *($3);
                       }
-                    | IDENTIFIER '.' IDENTIFIER WHERE_OP literal_data {
+                    | column_and_table WHERE_OP literal_data {
                         $$ = new usql::WhereStatement;
-                        $$->op = $4;
+                        $$->op = $2;
                         $$->a_is_literal = false;
-                        $$->na = std::pair<std::string, std::string>(*($1), *($3));
-                        $$->b = *($5);
+                        $$->na = *($1);
+                        $$->b = *($3);
                     }
-                    | literal_data WHERE_OP IDENTIFIER '.' IDENTIFIER {
+                    | literal_data WHERE_OP column_and_table {
                         $$ = new usql::WhereStatement;
                         $$->op = $2; $$->a = *($1);
                         $$->b_is_literal = false;
-                        $$->nb = std::pair<std::string, std::string>(*($3), *($5));
+                        $$->nb = *($3);
                     }
-                    | IDENTIFIER '.' IDENTIFIER WHERE_OP IDENTIFIER '.' IDENTIFIER {
+                    | column_and_table WHERE_OP column_and_table {
                         $$ = new usql::WhereStatement;
-                        $$->op = $4;
+                        $$->op = $2;
                         $$->a_is_literal = $$->b_is_literal = false;
-                        $$->na = std::pair<std::string, std::string>(*($1), *($3));
-                        $$->nb = std::pair<std::string, std::string>(*($5), *($7));
+                        $$->na = *($1);
+                        $$->nb = *($3);
                     } 
                     | '(' where_stmt ')' {
                         $$ = $2; $2 = nullptr;
@@ -145,6 +149,12 @@ where_stmt          : literal_data WHERE_OP literal_data {
                         $$->type = usql::WhereStatement::WhereStatementType::NOT;
                         $$->children.push_back(std::unique_ptr<usql::WhereStatement>($2));
                         $2 = nullptr;
+                    }
+                    ;
+
+column_and_table    : IDENTIFIER {$$ = new std::pair<std::string, std::string>("", *($1));}
+                    | IDENTIFIER '.' IDENTIFIER {
+                        $$ = new std::pair<std::string, std::string>(*($1), *($3));
                     }
                     ;
 
