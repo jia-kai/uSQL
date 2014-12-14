@@ -78,8 +78,28 @@ bool WhereStatement::verify_leaf() const {
     }
 }
 
+void WhereStatement::prepare_verify(const std::vector<ColumnAndTableName> & names) {
+    if(type != WhereStatement::WhereStatementType::LEAF) {
+        for(auto & child: children)
+            child->prepare_verify(names);
+        return;
+    }
+    if(!a_is_literal) {
+        auto it = std::find(names.begin(), names.end(), na);
+        usql_assert(it != names.end(), "na: %s.%s not found", 
+                    na.first.c_str(), na.second.c_str());
+        verify_index_a = it - names.begin();
+    }
+    if(!b_is_literal) {
+        auto it = std::find(names.begin(), names.end(), nb);
+        usql_assert(it != names.end(), "nb: %s.%s not found", 
+                    nb.first.c_str(), nb.second.c_str());
+        verify_index_b = it - names.begin();
+    }
+}
 
-bool WhereStatement::verify(std::map<ColumnAndTableName, LiteralData> & data,
+
+bool WhereStatement::verify(const std::vector<LiteralData> & data,
                             bool force_verify) {
     if(type == WhereStatement::WhereStatementType::PASS)
         return children[0]->verify(data, force_verify);
@@ -87,9 +107,9 @@ bool WhereStatement::verify(std::map<ColumnAndTableName, LiteralData> & data,
         return true;
     if(type == WhereStatement::WhereStatementType::LEAF) {
         if(a_is_literal)
-            a = data[na];  // FIXME: this is slow
+            a = data[verify_index_a];
         if(b_is_literal)
-            b = data[nb];
+            b = data[verify_index_b];
         return this->verify_leaf();
     }
 #if 0

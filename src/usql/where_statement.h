@@ -37,8 +37,12 @@ public:
 
     bool need_verify = false;
 
+private:
+    int verify_index_a = -1, verify_index_b = -1;
+
 public:
-    bool verify(std::map<ColumnAndTableName, LiteralData> & data,
+    void prepare_verify(const std::vector<ColumnAndTableName> & names);
+    bool verify(const std::vector<LiteralData> & data,
                 bool force_verify = false);
 
     static const rowid_t INCLUDE_ALL;

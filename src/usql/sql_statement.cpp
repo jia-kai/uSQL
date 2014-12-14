@@ -99,6 +99,9 @@ int SQLStatement::parse(){
 }
 
 void SQLStatement::normalize() {
+    if(where_stmt)
+        where_stmt->normalize();
+    
     if(type == SQLStatement::Type::SELECT) {
         for(auto & val: select_vals)
             if(val.first.length() == 0)
