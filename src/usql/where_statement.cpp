@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-09
+* @Last Modified time: 2014-12-14
 */
 
 #include <iostream>
@@ -323,4 +323,16 @@ void WhereStatement::normalize_leaf() {
         op = WhereStatement::WhereStatementOperator::LE;
     if(op == WhereStatement::WhereStatementOperator::LE)
         op = WhereStatement::WhereStatementOperator::GE;
+}
+
+void WhereStatement::setDefaultTable(const std::string & tb_name) {
+    if(type != WhereStatement::WhereStatementType::LEAF) {
+        for(auto & child: children)
+            child->setDefaultTable(tb_name);
+        return;
+    }
+    if(!a_is_literal && na.first.length() == 0)
+        na.first = tb_name;
+    if(!b_is_literal && nb.first.length() == 0)
+        nb.first = tb_name;
 }

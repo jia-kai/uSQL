@@ -60,6 +60,7 @@ public:
     SQLStatement(std::string sql);
     void setDebug(bool enable);
     int parse();
+    void normalize();
     std::ostream & print(std::ostream & stream);
     
     std::string origin;

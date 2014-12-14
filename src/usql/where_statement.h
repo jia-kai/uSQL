@@ -52,6 +52,7 @@ public:
                             index_map_t & indexes);
 
     void normalize();
+    void setDefaultTable(const std::string & tb_name);
 
 private:
     void revert();

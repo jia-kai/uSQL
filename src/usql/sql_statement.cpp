@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-09
+* @Last Modified time: 2014-12-14
 */
 
 #include "./sql_statement.h"
@@ -96,4 +96,13 @@ void SQLStatement::setDebug(bool enable) {
 
 int SQLStatement::parse(){
     return parser->parse();
+}
+
+void SQLStatement::normalize() {
+    if(type == SQLStatement::Type::SELECT) {
+        for(auto & val: select_vals)
+            if(val.first.length() == 0)
+                val.first = table_names[0];
+        where_stmt->setDefaultTable(table_names[0]);
+    }
 }

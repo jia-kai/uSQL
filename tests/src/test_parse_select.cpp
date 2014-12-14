@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-09
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-09
+* @Last Modified time: 2014-12-14
 */
 
 #include <iostream>
@@ -43,4 +43,17 @@ TEST(SQLParserTest, select_values) {
     stmt.print(out);
     EXPECT_EQ(out.str(), std::string("SELECT .a, .c, t1.d"
               " FROM t1, t2 WHERE 1 = 1"));
+}
+
+TEST(SQLParserTest, normalize) {
+    std::ostrstream out;
+    string sql("select a,c,t1.d from t1,t2 where 1 = 1 and x = d");
+    SQLStatement stmt(sql);
+    stmt.parse();
+    stmt.normalize();
+    stmt.print(cout);
+    cout << endl;
+    stmt.print(out);
+    EXPECT_EQ(out.str(), std::string("SELECT t1.a, t1.c, t1.d"
+              " FROM t1, t2 WHERE (1 = 1) AND (t1.x = t1.d)"));
 }
