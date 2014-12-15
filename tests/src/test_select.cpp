@@ -65,3 +65,22 @@ TEST_F(SelectTest, single_table_all_match) {
         EXPECT_EQ(row[0].int_v, i++);
     }
 }
+
+TEST_F(SelectTest, single_table_single_column_no_index) {
+    auto where_stmt = std::make_unique<WhereStatement>();
+    where_stmt->a = 10;
+    where_stmt->b_is_literal = false;
+    where_stmt->op = WhereStatement::WhereStatementOperator::GT;
+    where_stmt->nb = ColumnAndTableName("table0", "c0");
+    where_stmt->normalize();
+
+    std::vector<ColumnAndTableName> dests = {
+        ColumnAndTableName("table0", "c0"),
+        ColumnAndTableName("table0", "c2")
+    };
+    auto vals = select(t0_selector, dests, where_stmt);
+
+    EXPECT_EQ(vals.size(), 10);
+    for(int i = 0 ; i < 10 ; i += 1)
+        EXPECT_EQ(vals[i][0].int_v, i);
+}

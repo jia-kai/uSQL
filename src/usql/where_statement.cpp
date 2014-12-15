@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-14
+* @Last Modified time: 2014-12-15
 */
 
 #include <iostream>
@@ -106,9 +106,9 @@ bool WhereStatement::verify(const std::vector<LiteralData> & data,
     if(!force_verify && !need_verify)
         return true;
     if(type == WhereStatement::WhereStatementType::LEAF) {
-        if(a_is_literal)
+        if(!a_is_literal)
             a = data[verify_index_a];
-        if(b_is_literal)
+        if(!b_is_literal)
             b = data[verify_index_b];
         return this->verify_leaf();
     }
@@ -335,14 +335,18 @@ void WhereStatement::normalize_leaf() {
     std::swap(a, b);
     std::swap(na, nb);
     std::swap(a_is_literal, b_is_literal);
-    if(op == WhereStatement::WhereStatementOperator::GT)
-        op = WhereStatement::WhereStatementOperator::LT;
-    if(op == WhereStatement::WhereStatementOperator::LT)
-        op = WhereStatement::WhereStatementOperator::GT;
-    if(op == WhereStatement::WhereStatementOperator::GE)
-        op = WhereStatement::WhereStatementOperator::LE;
-    if(op == WhereStatement::WhereStatementOperator::LE)
-        op = WhereStatement::WhereStatementOperator::GE;
+
+    switch(op) {
+        case WhereStatement::WhereStatementOperator::GT:
+            op = WhereStatement::WhereStatementOperator::LT; break;
+        case WhereStatement::WhereStatementOperator::LT:
+            op = WhereStatement::WhereStatementOperator::GT; break;
+        case WhereStatement::WhereStatementOperator::GE:
+            op = WhereStatement::WhereStatementOperator::LE; break;
+        case WhereStatement::WhereStatementOperator::LE:
+            op = WhereStatement::WhereStatementOperator::GE; break;
+        default: break;
+    }
 }
 
 void WhereStatement::setDefaultTable(const std::string & tb_name) {

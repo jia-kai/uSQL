@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-14
+* @Last Modified time: 2014-12-15
 */
 
 #include <iostream>
@@ -31,8 +31,8 @@ void SelectExecutor::execute(std::vector<ColumnAndTableName> dests,
     where->prepare_verify(names);
 
     dests_indexes.clear();
-    callback_values.resize(names.size());
-    verify_values.resize(dests.size());
+    callback_values.resize(dests.size());
+    verify_values.resize(names.size());
     this->recursive_execute(0, rows, dests, where, callback);
 }
 
