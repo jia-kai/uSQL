@@ -63,7 +63,7 @@
 
 %type <literal_data> literal_data
 %type <where_stmt> where_stmt
-%type <column_and_table> column_and_table
+%type <column_and_table> column_and_table column_and_table_or_expand
 
 %type <datatype>              datatype
 %type <stringdata>            column_def
@@ -102,9 +102,8 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     }
                     ;
 
-select_vals         : '*' { driver.select_vals.push_back(std::pair<std::string, std::string>("*", "*")); }
-                    | column_and_table { driver.select_vals.push_back(*($1)); }
-                    | select_vals ',' column_and_table { driver.select_vals.push_back(*($3)); }
+select_vals         : column_and_table_or_expand { driver.select_vals.push_back(*($1)); }
+                    | select_vals ',' column_and_table_or_expand { driver.select_vals.push_back(*($3)); }
                     ;
 
 tables              : IDENTIFIER { driver.table_names.push_back(*($1)); }
@@ -159,6 +158,11 @@ where_stmt          : literal_data WHERE_OP literal_data {
                         $$->children.push_back(std::unique_ptr<usql::WhereStatement>($2));
                         $2 = nullptr;
                     }
+                    ;
+
+column_and_table_or_expand : column_and_table {$$ = $1; $1 = nullptr; }
+                    | IDENTIFIER '.' '*' {$$ = new ColumnAndTableName(*($1), "*"); }
+                    | '*' {$$ = new ColumnAndTableName("*", "*"); }
                     ;
 
 column_and_table    : IDENTIFIER {$$ = new std::pair<std::string, std::string>("", *($1));}

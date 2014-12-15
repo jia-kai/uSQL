@@ -13,14 +13,49 @@
 
 using namespace usql;
 
+auto SelectExecutor::expand_dests(std::vector<ColumnAndTableName> dests) -> decltype(dests) {
+    std::vector<ColumnAndTableName> expanded_table;
+    for(auto & dest: dests) {
+        if(dest.first == "*") {
+            for(auto & table: tables) {
+                expanded_table.emplace_back(table.first, dest.second);
+            }
+        } else 
+            expanded_table.push_back(dest);
+    }
+    std::vector<ColumnAndTableName> ret;
+    for(auto & dest: expanded_table) {
+        if(dest.second == "*") {
+            auto table = std::find_if(tables.begin(), tables.end(), 
+                                      [&](const std::pair<std::string, std::shared_ptr<Table>> & x) -> bool {
+                                          return x.first == dest.first;
+                                      });
+            usql_assert(table != tables.end(), 
+                        "table %s for found for expand", dest.first.c_str());
+            for(auto & col: table->second->columns)
+                ret.emplace_back(dest.first, col.first);
+        } else 
+            ret.push_back(dest);
+    }
+    return ret;
+}
 
-void SelectExecutor::execute(std::vector<ColumnAndTableName> dests, 
+void SelectExecutor::execute(std::vector<ColumnAndTableName> & dests, 
                              const std::unique_ptr<WhereStatement> & where,
                              SelectExecutor::callback_t callback) {
+    dests = expand_dests(dests);
+
     std::map<std::string, std::set<rowid_t>> rows;
     for(auto & table: tables)
         rows[table.first].insert(WhereStatement::INCLUDE_ALL);
-    where->filter(rows, indexes);
+    rows = where->filter(rows, indexes);
+
+    for(auto & row: rows) {
+        usql_log("After filter: row count of `%s`: %lu", 
+                 row.first.c_str(), row.second.size());
+        if(row.second.find(WhereStatement::INCLUDE_ALL) != row.second.end())
+            usql_log("\tINCLUDE ALL");
+    }
 
     std::vector<ColumnAndTableName> names;
     for(auto & table: tables) {
@@ -60,10 +95,16 @@ void SelectExecutor::recursive_execute(size_t depth,
             else dests_index.push_back(-1);
         }
         dests_indexes.push_back(dests_index);
+
+        usql_log("Dests_index for table %lu:", depth);
+        for(size_t i = 0 ; i < dests_index.size() ; i += 1)
+            usql_log("\t%lu -> %d", i, dests_index[i]);
     }
-    auto & dests_index = dests_indexes[depth];
 
     auto callnext_f = [&, this](const std::vector<LiteralData> & data) -> bool {
+        // WTF: must calculate dests_index every time we use it
+        // because the memory location of dests_indexes may change
+        auto & dests_index = dests_indexes[depth];
         for(size_t i = 0 ; i < data.size() ; i += 1) {
             verify_values[i] = data[i];
             if(dests_index[i] != -1)

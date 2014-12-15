@@ -20,6 +20,8 @@ private:
 
     std::vector<std::vector<int>> dests_indexes;
 
+    auto expand_dests(std::vector<ColumnAndTableName> dests) -> decltype(dests);
+
     void recursive_execute(size_t depth, 
                            std::map<std::string, std::set<rowid_t>> & rows,
                            const std::vector<ColumnAndTableName> dests,
@@ -39,7 +41,7 @@ public:
         indexes[name] = index;
     }
 
-    void execute(std::vector<ColumnAndTableName> dests, 
+    void execute(std::vector<ColumnAndTableName> & dests, 
                  const std::unique_ptr<WhereStatement> & where,
                  callback_t callback);
 

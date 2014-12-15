@@ -60,7 +60,7 @@ using token = usql::SQLParser::token;
 "<"                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LT; return token::WHERE_OP; }
 "="                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
 
-[0-9]+              {
+-?[0-9]+            {
                         yylval->intdata = atoi(yytext);
                         return token::INTEGER;
                     }
