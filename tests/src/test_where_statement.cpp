@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-07
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-09
+* @Last Modified time: 2014-12-15
 */
 
 #include "./page_io_env.h"
@@ -30,7 +30,7 @@ protected:
     PageIO::page_id_t index0_root = 0, index1_root = 0;
 
     std::map<std::string, std::set<rowid_t>> rows;
-    std::map<ColumnAndTableName, std::unique_ptr<IndexBase>> indexes;
+    std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
 
     void SetUp() override {
         PageIOTestEnv::SetUp();

@@ -72,7 +72,7 @@ $(BUILD_DIR)/gtest_main.a: $(BUILD_DIR)/gtest-all.o $(BUILD_DIR)/gtest_main.o
 	@echo "[ar] gtest_main"
 	$(V)$(AR) $(ARFLAGS) $@ $^
 
-$(BUILD_DIR)/%.o: %.$(SRC_EXT) $(GTEST_HEADERS) parser scanner
+$(BUILD_DIR)/%.o: %.$(SRC_EXT) $(GTEST_HEADERS)
 	@echo "[cxx] $< ..."
 	@mkdir -pv $(dir $@)
 	@$(CXX) $(CPPFLAGS) -MM -MT "$@" "$<"  > "$(@:.o=.d)"

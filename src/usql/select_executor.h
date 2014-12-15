@@ -27,16 +27,16 @@ private:
                            callback_t callback);
 
 protected:
-    std::vector<std::pair<std::string, std::unique_ptr<Table>>> tables;
-    std::map<ColumnAndTableName, std::unique_ptr<IndexBase>> indexes;
+    std::vector<std::pair<std::string, std::shared_ptr<Table>>> tables;
+    std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
 
 public:
     SelectExecutor() = default;
-    void addTable(std::string name, std::unique_ptr<Table> && t){
-        tables.emplace_back(name, std::move(t));
+    void addTable(std::string name, std::shared_ptr<Table> t){
+        tables.emplace_back(name, t);
     }
-    void addIndex(ColumnAndTableName name, std::unique_ptr<IndexBase> && index) {
-        indexes[name] = std::move(index);
+    void addIndex(ColumnAndTableName name, std::shared_ptr<IndexBase> index) {
+        indexes[name] = index;
     }
 
     void execute(std::vector<ColumnAndTableName> dests, 

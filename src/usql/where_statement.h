@@ -48,7 +48,7 @@ public:
     static const rowid_t INCLUDE_ALL;
 
     using table_rows_map_t = std::map<std::string, std::set<rowid_t>>;
-    using index_map_t = std::map<ColumnAndTableName, std::unique_ptr<IndexBase>>;
+    using index_map_t = std::map<ColumnAndTableName, std::shared_ptr<IndexBase>>;
 
     std::ostream & print(std::ostream & stream) const;
 
