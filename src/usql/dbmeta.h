@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstring>
+#include "./common.h"
 
 namespace usql {
 
@@ -22,6 +23,10 @@ struct DBMeta {
     size_t nr_page_allocated;
 
     size_t page_freelist_root;
+
+    size_t root_table_page;
+
+    rowid_t root_table_rows;
 
     bool check_magic();
 

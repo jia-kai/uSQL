@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-15
+* @Last Modified time: 2014-12-16
 */
 
 #include <iostream>
@@ -101,6 +101,10 @@ void WhereStatement::prepare_verify(const std::vector<ColumnAndTableName> & name
 
 bool WhereStatement::verify(const std::vector<LiteralData> & data,
                             bool force_verify) {
+    #if 0
+    usql_log("In verify: type = %d, op = %d, a_is_l: %d, b_is_l: %d, need_verify: %d",
+             int(type), int(op), a_is_literal, b_is_literal, need_verify);
+    #endif
     if(type == WhereStatement::WhereStatementType::PASS)
         return children[0]->verify(data, force_verify);
     if(!force_verify && !need_verify)
@@ -299,15 +303,30 @@ void WhereStatement::normalize() {
 
 void WhereStatement::revert() {
     if(type == WhereStatement::WhereStatementType::LEAF) {
-        if(op == WhereStatement::WhereStatementOperator::GT)
+        if(op == WhereStatement::WhereStatementOperator::GT) {
             op = WhereStatement::WhereStatementOperator::LE;
-        if(op == WhereStatement::WhereStatementOperator::LT)
+            return;
+        }
+        if(op == WhereStatement::WhereStatementOperator::LT) {
             op = WhereStatement::WhereStatementOperator::GE;
-        if(op == WhereStatement::WhereStatementOperator::GE)
+            return;
+        }
+        if(op == WhereStatement::WhereStatementOperator::GE) {
             op = WhereStatement::WhereStatementOperator::LT;
-        if(op == WhereStatement::WhereStatementOperator::LE)
+            return;
+        }
+        if(op == WhereStatement::WhereStatementOperator::LE) {
             op = WhereStatement::WhereStatementOperator::GT;
-        return;
+            return;
+        }
+        if(op == WhereStatement::WhereStatementOperator::EQ) {
+            op = WhereStatement::WhereStatementOperator::NE;
+            return;
+        }
+        if(op == WhereStatement::WhereStatementOperator::NE) {
+            op = WhereStatement::WhereStatementOperator::EQ;
+            return;
+        }
     }
     if(type == WhereStatement::WhereStatementType::AND) {
         type = WhereStatement::WhereStatementType::OR;

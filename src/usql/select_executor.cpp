@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-15
+* @Last Modified time: 2014-12-16
 */
 
 #include <iostream>
@@ -77,6 +77,14 @@ void SelectExecutor::recursive_execute(size_t depth,
                                        const std::unique_ptr<WhereStatement> & where,
                                        SelectExecutor::callback_t callback) {
     if(depth >= tables.size()) {
+    #if 0
+        usql_log("Verifying...");
+        for(auto & val: verify_values) {
+            val.print(std::cerr); 
+            std::cerr << "(" << int(val.datatype) << ") ";
+        }
+        std::cerr << std::endl;
+    #endif
         if(where->verify(verify_values))
             callback(callback_values);
         return;
@@ -96,6 +104,8 @@ void SelectExecutor::recursive_execute(size_t depth,
         }
         dests_indexes.push_back(dests_index);
 
+        table_columns_count.push_back(table->columns.size());
+
         usql_log("Dests_index for table %lu:", depth);
         for(size_t i = 0 ; i < dests_index.size() ; i += 1)
             usql_log("\t%lu -> %d", i, dests_index[i]);
@@ -105,8 +115,10 @@ void SelectExecutor::recursive_execute(size_t depth,
         // WTF: must calculate dests_index every time we use it
         // because the memory location of dests_indexes may change
         auto & dests_index = dests_indexes[depth];
+        auto verify_val_index_base = (depth == 0)?0:
+            table_columns_count[depth-1];
         for(size_t i = 0 ; i < data.size() ; i += 1) {
-            verify_values[i] = data[i];
+            verify_values[verify_val_index_base + i] = data[i];
             if(dests_index[i] != -1)
                 callback_values[dests_index[i]] = data[i];
         }

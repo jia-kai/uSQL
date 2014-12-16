@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-14
+* @Last Modified time: 2014-12-16
 */
 
 #include "./sql_statement.h"
@@ -99,8 +99,13 @@ int SQLStatement::parse(){
 }
 
 void SQLStatement::normalize() {
-    if(where_stmt)
-        where_stmt->normalize();
+    if(!where_stmt) {
+        where_stmt = std::make_unique<WhereStatement>();
+        // 0 = 0
+        where_stmt->a = LiteralData(0);
+        where_stmt->b = LiteralData(0); 
+    }
+    where_stmt->normalize();
     
     if(type == SQLStatement::Type::SELECT) {
         for(auto & val: select_vals)

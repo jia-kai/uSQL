@@ -13,7 +13,7 @@
 #include <unordered_set>
 #include <cmath>
 
-constexpr size_t TREE_LEAF_BRANCH = 4;
+constexpr size_t TREE_LEAF_BRANCH = 6;
 
 using VectorTestEnvBase = PageIOTestEnvTpl<
     VectorImpl::header_size() + sizeof(int) * TREE_LEAF_BRANCH>;

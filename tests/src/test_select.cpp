@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-15
+* @Last Modified time: 2014-12-16
 */
 
 #include <iostream>
@@ -15,16 +15,22 @@ using namespace usql;
 class SelectTest: public TableAndIndexEnv {
 protected:
     std::unique_ptr<SelectExecutor> t0_selector;
+    std::unique_ptr<SelectExecutor> t1_selector;
     std::unique_ptr<SelectExecutor> dual_selector;
 
     void SetUp() override {
         TableAndIndexEnv::SetUp();
         t0_selector = std::make_unique<SelectExecutor>();
+        t1_selector = std::make_unique<SelectExecutor>();
         dual_selector = std::make_unique<SelectExecutor>();
 
         t0_selector->addTable(std::string("table0"), table0);
         t0_selector->addIndex(ColumnAndTableName("table0", "c1"),
                               t0_c1_index);
+
+        t1_selector->addTable(std::string("table1"), table1);
+        t1_selector->addIndex(ColumnAndTableName("table1", "c0"), 
+                              t1_c0_index);
 
         dual_selector->addTable(std::string("table0"), table0);
         dual_selector->addTable(std::string("table1"), table1);
@@ -150,11 +156,35 @@ TEST_F(SelectTest, dual_table_and_expand) {
     EXPECT_EQ(vals.size(), 10000);
 }
 
-// TEST_F(SelectTest, dual_table_ultimate) {
-//     std::string sql("SELECT table0.c1, table1.c0\n"
-//                     "FROM table0, table1 WHERE\n"
-//                     "table0.c1 >= -9 and\n"
-//                     "table1.c0 = \"10\"");
-//     auto vals = parse_and_select(dual_selector, sql);
-//     EXPECT_EQ(vals.size(), 10);
-// }
+TEST_F(SelectTest, single_table_no_where_stmt) {
+    std::string sql("SELECT *\n"
+                    "FROM table0\n");
+    auto vals = parse_and_select(t0_selector, sql);
+    EXPECT_EQ(vals.size(), 10000);
+}
+
+TEST_F(SelectTest, single_table_multiple_match) {
+    std::string sql("SELECT *\n"
+                    "FROM table1 WHERE\n"
+                    "c1 = 0");
+    auto vals = parse_and_select(t1_selector, sql);
+    EXPECT_EQ(vals.size(), 10);
+}
+
+TEST_F(SelectTest, single_table_string_index) {
+    std::string sql("SELECT *\n"
+                    "FROM table1 WHERE\n"
+                    "not c0 = \"0\"");
+    auto vals = parse_and_select(t1_selector, sql);
+    EXPECT_EQ(vals.size(), 999);
+}
+
+TEST_F(SelectTest, dual_table_ultimate) {
+    std::string sql("SELECT table0.c1, table1.*\n"
+                    "FROM table0, table1 WHERE\n"
+                    "(table0.c1 >= -99 or table0.c1 >= 42) and\n"
+                    "(table1.c1 = 0 and not table1.c0 = \"900\") and\n"
+                    " table0.c0 != table1.c1");
+    auto vals = parse_and_select(dual_selector, sql);
+    EXPECT_EQ(vals.size(), 99*9);
+}
