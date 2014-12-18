@@ -9,8 +9,7 @@
 #define __usql_insert_executor_h__ value
 
 #include "./sql_statement.h"
-#include "./table.h"
-#include "./index.h"
+#include "./table_info.h"
 
 using namespace usql;
 
@@ -25,17 +24,20 @@ public:
 };
 
 class InsertExecutor {
+
 private:
     std::shared_ptr<Table> table;
-    std::vector<std::string> column_names;
 
-    std::vector<std::shared_ptr<IndexBase>> indexes;
-    std::vector<int> column_indexes;
+private:
+    std::shared_ptr<TableInfo> tableinfo;
+
+    // to insert
+    std::vector<std::string> column_names;
+    std::vector<int> column_indexes; // table to me
 
 public:
-    InsertExecutor(std::shared_ptr<Table> t, 
+    InsertExecutor(std::shared_ptr<TableInfo> tableinfo,
                    std::vector<ColumnAndTableName> cols);
-    void addIndex(std::string name, std::shared_ptr<IndexBase> index);
 
 public:
     rowid_t insert(const std::vector<LiteralData> & vals);

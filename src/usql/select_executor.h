@@ -5,6 +5,7 @@
 #include "./table.h"
 #include "./datatype/base.h"
 #include "./where_statement.h"
+#include "./table_info.h"
 
 using namespace usql;
 
@@ -30,17 +31,21 @@ private:
                            callback_t callback);
 
 protected:
-    std::vector<std::pair<std::string, std::shared_ptr<Table>>> tables;
-    std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
+    std::vector<std::shared_ptr<TableInfo>> tableinfos;
+    // std::vector<std::pair<std::string, std::shared_ptr<Table>>> tables;
+    // std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
 
 public:
     SelectExecutor() = default;
-    void addTable(std::string name, std::shared_ptr<Table> t){
-        tables.emplace_back(name, t);
+    void addTable(std::shared_ptr<TableInfo> info) {
+        tableinfos.push_back(info);
     }
-    void addIndex(ColumnAndTableName name, std::shared_ptr<IndexBase> index) {
-        indexes[name] = index;
-    }
+    // void addTable(std::string name, std::shared_ptr<Table> t){
+    //     tables.emplace_back(name, t);
+    // }
+    // void addIndex(ColumnAndTableName name, std::shared_ptr<IndexBase> index) {
+    //     indexes[name] = index;
+    // }
 
     void execute(std::vector<ColumnAndTableName> & dests, 
                  const std::unique_ptr<WhereStatement> & where,

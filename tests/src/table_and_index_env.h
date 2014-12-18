@@ -13,6 +13,7 @@
 #include "usql/table.h"
 #include "usql/index.h"
 #include "usql/sql_statement.h"
+#include "usql/table_info.h"
 
 using namespace usql;
 
@@ -20,6 +21,8 @@ class TableAndIndexEnv: public PageIOTestEnv {
 protected:
     std::shared_ptr<Table> table0, table1;
     std::shared_ptr<IndexBase> t0_c1_index, t1_c0_index;
+
+    std::shared_ptr<TableInfo> tbinfo0, tbinfo1;
 
     PageIO::page_id_t table0_root = 0, table1_root = 0;
     PageIO::page_id_t t0_c1_index_root = 0, t1_c0_index_root = 0;
@@ -35,7 +38,6 @@ protected:
         usql_assert(0 == stmt0.parse(), "table0 parse error");
         stmt0.normalize();
         table0 = std::make_shared<Table>(*m_page_io, stmt0.column_defs,
-                                    stmt0.column_constraints,
                                     table0_rows, 
                                     [this](const rowid_t r){table0_rows = r; });
         table0->load(table0_root, 
@@ -47,7 +49,6 @@ protected:
         usql_assert(0 == stmt1.parse(), "table1 parse error");
         stmt1.normalize();
         table1 = std::make_shared<Table>(*m_page_io, stmt1.column_defs,
-                                    stmt1.column_constraints,
                                     table1_rows, 
                                     [this](const rowid_t r){table1_rows = r; });
         table1->load(table1_root, 
@@ -77,6 +78,20 @@ protected:
             auto row = table1->insert(vals);
             t1_c0_index->insert(vals[0], row);
         }
+
+        tbinfo0 = std::make_shared<TableInfo>();
+        tbinfo0->name = "table0";
+        tbinfo0->table = table0;
+        tbinfo0->indexes.resize(3);
+        tbinfo0->indexes[1] = t0_c1_index;
+        tbinfo0->setConstraints(stmt0.column_constraints);
+
+        tbinfo1 = std::make_shared<TableInfo>();
+        tbinfo1->name = "table1";
+        tbinfo1->table = table1;
+        tbinfo1->indexes.resize(2);
+        tbinfo1->indexes[0] = t1_c0_index;
+        tbinfo1->setConstraints(stmt1.column_constraints);
     }
 };
 

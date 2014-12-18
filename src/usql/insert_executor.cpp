@@ -21,7 +21,7 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
             else {
                 column_indexes.push_back(-1);
                 // check not null
-                auto & cons = table->constraints[i];
+                auto & cons = tableinfo->constraints[i];
                 if(cons.find(SQLStatement::ColumnConstraint::NOT_NULL) != cons.end())
                     throw InsertException("NOT NULL column not provided");
             }
@@ -41,9 +41,9 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
             full_vals.push_back(vals[column_indexes[i]]);
 
         // check primary / unique
-        auto & cons = table->constraints[i];
+        auto & cons = tableinfo->constraints[i];
         auto & val = full_vals.back();
-        auto & index = indexes[i];
+        auto & index = tableinfo->indexes[i];
         if(cons.find(SQLStatement::ColumnConstraint::PRIMARY) != cons.end() || 
            cons.find(SQLStatement::ColumnConstraint::UNIQUE) != cons.end()) {
             usql_assert(index, "Index must exists for Primary or Unique column");
@@ -57,7 +57,7 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
     auto ret = table->insert(full_vals);
     for(size_t i = 0 ; i < table->columns.size() ; i += 1) {
         auto & val = full_vals[i];
-        auto & index = indexes[i];
+        auto & index = tableinfo->indexes[i];
         if(index)
             index->insert(val, ret);
     }
@@ -65,9 +65,11 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
 
 }
 
-InsertExecutor::InsertExecutor(std::shared_ptr<Table> t, 
-                               std::vector<ColumnAndTableName> cols):
-table(t) {
+InsertExecutor::InsertExecutor(std::shared_ptr<TableInfo> tableinfo, 
+                               std::vector<ColumnAndTableName> cols) {
+    this->tableinfo = tableinfo;
+    this->table = tableinfo->table;
+
     if(cols.empty()) {
         for(auto & col: table->columns)
             column_names.push_back(col.first);
@@ -75,17 +77,4 @@ table(t) {
         for(auto & col: cols)
             column_names.push_back(col.second);
     }
-    for(size_t i = 0 ; i < table->columns.size() ; i += 1)
-        indexes.emplace_back(); // nullptr
-}
-
-void InsertExecutor::addIndex(std::string name, std::shared_ptr<IndexBase> index) {
-    auto it = std::find_if(table->columns.begin(), 
-                           table->columns.end(), 
-                           [&](const column_def_t & col) -> bool {
-                              return col.first == name;
-                           });
-    if(it == table->columns.end())
-        return;
-    indexes[it - table->columns.begin()] = index;
 }

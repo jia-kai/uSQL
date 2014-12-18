@@ -20,16 +20,12 @@ size_t Table::compute_payload_size(std::vector<column_def_t> & cols) {
 
 Table::Table(PageIO & page_io,
              std::vector<column_def_t> cols, 
-             std::map<std::string, column_constraints_t> cons,
              rowid_t mr,
              rowid_updator_t updator):
 BTree<rowid_t>(page_io, compute_payload_size(cols)),
 columns(cols),
 maxrow(mr),
 maxrow_updator(updator){
-
-    for(auto & col: columns)
-        constraints.push_back(cons[col.first]);
 
 }
 

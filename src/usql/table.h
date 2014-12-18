@@ -22,7 +22,7 @@ private:
 
 public:
     std::vector<column_def_t> columns;
-    std::vector<column_constraints_t> constraints;
+    // std::vector<column_constraints_t> constraints;
     // std::map<std::string, column_constraints_t> constraints;
 
 protected:
@@ -35,7 +35,6 @@ public:
 
     Table(PageIO & page_io,
           std::vector<column_def_t> cols, 
-          std::map<std::string, column_constraints_t> cons,
           rowid_t mr,
           rowid_updator_t updator);
 

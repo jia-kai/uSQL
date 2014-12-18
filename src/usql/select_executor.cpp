@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-16
+* @Last Modified time: 2014-12-18
 */
 
 #include <iostream>
@@ -17,8 +17,8 @@ auto SelectExecutor::expand_dests(std::vector<ColumnAndTableName> dests) -> decl
     std::vector<ColumnAndTableName> expanded_table;
     for(auto & dest: dests) {
         if(dest.first == "*") {
-            for(auto & table: tables) {
-                expanded_table.emplace_back(table.first, dest.second);
+            for(auto & tableinfo: tableinfos) {
+                expanded_table.emplace_back(tableinfo->name, dest.second);
             }
         } else 
             expanded_table.push_back(dest);
@@ -26,13 +26,14 @@ auto SelectExecutor::expand_dests(std::vector<ColumnAndTableName> dests) -> decl
     std::vector<ColumnAndTableName> ret;
     for(auto & dest: expanded_table) {
         if(dest.second == "*") {
-            auto table = std::find_if(tables.begin(), tables.end(), 
-                                      [&](const std::pair<std::string, std::shared_ptr<Table>> & x) -> bool {
-                                          return x.first == dest.first;
-                                      });
-            usql_assert(table != tables.end(), 
+            auto tbinfo = std::find_if(tableinfos.begin(), 
+                                       tableinfos.end(), 
+                                       [&](const std::shared_ptr<TableInfo> & x) -> bool {
+                                           return x->name == dest.first;
+                                       });
+            usql_assert(tbinfo != tableinfos.end(), 
                         "table %s for found for expand", dest.first.c_str());
-            for(auto & col: table->second->columns)
+            for(auto & col: (*tbinfo)->table->columns)
                 ret.emplace_back(dest.first, col.first);
         } else 
             ret.push_back(dest);
@@ -46,9 +47,22 @@ void SelectExecutor::execute(std::vector<ColumnAndTableName> & dests,
     dests = expand_dests(dests);
 
     std::map<std::string, std::set<rowid_t>> rows;
-    for(auto & table: tables)
-        rows[table.first].insert(WhereStatement::INCLUDE_ALL);
+    for(auto & tbinfo: tableinfos)
+        rows[tbinfo->name].insert(WhereStatement::INCLUDE_ALL);
+
+    std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
+    std::vector<ColumnAndTableName> names;
+    for(auto & tbinfo: tableinfos) {
+        for(size_t i = 0 ; i < tbinfo->indexes.size() ; i += 1) {
+            auto & col = tbinfo->table->columns[i];
+            auto tmp = ColumnAndTableName(tbinfo->name, col.first);
+            if(tbinfo->indexes[i])
+                indexes[tmp] = tbinfo->indexes[i];
+            names.push_back(tmp);
+        }
+    }
     rows = where->filter(rows, indexes);
+    where->prepare_verify(names);
 
     for(auto & row: rows) {
         usql_log("After filter: row count of `%s`: %lu", 
@@ -56,14 +70,6 @@ void SelectExecutor::execute(std::vector<ColumnAndTableName> & dests,
         if(row.second.find(WhereStatement::INCLUDE_ALL) != row.second.end())
             usql_log("\tINCLUDE ALL");
     }
-
-    std::vector<ColumnAndTableName> names;
-    for(auto & table: tables) {
-        auto tb_name = table.first;
-        for(auto & col: table.second->columns)
-            names.emplace_back(tb_name, col.first);
-    }
-    where->prepare_verify(names);
 
     dests_indexes.clear();
     callback_values.resize(dests.size());
@@ -76,7 +82,7 @@ void SelectExecutor::recursive_execute(size_t depth,
                                        const std::vector<ColumnAndTableName> dests,
                                        const std::unique_ptr<WhereStatement> & where,
                                        SelectExecutor::callback_t callback) {
-    if(depth >= tables.size()) {
+    if(depth >= tableinfos.size()) {
     #if 0
         usql_log("Verifying...");
         for(auto & val: verify_values) {
@@ -89,8 +95,8 @@ void SelectExecutor::recursive_execute(size_t depth,
             callback(callback_values);
         return;
     }
-    auto table_name = tables[depth].first;
-    auto & table = tables[depth].second;
+    auto table_name = tableinfos[depth]->name;
+    auto & table = tableinfos[depth]->table;
     // calculate which columns is in dests
     if(dests_indexes.size() <= depth) {
         std::vector<int> dests_index;

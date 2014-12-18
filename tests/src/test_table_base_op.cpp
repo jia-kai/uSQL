@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-04
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-05
+* @Last Modified time: 2014-12-18
 */
 
 #include "./page_io_env.h"
@@ -33,9 +33,7 @@ protected:
         cols.emplace_back(std::string("col1"), std::make_shared<IntDataType>());
         cols.emplace_back(std::string("col2"), std::make_shared<StringDataType>(128));
 
-        std::map<std::string, column_constraints_t> cons;
-
-        table = std::make_unique<Table>(*m_page_io, cols, cons, 
+        table = std::make_unique<Table>(*m_page_io, cols, 
             maxrow, [this](rowid_t x){maxrow = x; });
         table->load(tree_root, [this](const PageIO::Page & root){tree_root = root.id(); });
     }

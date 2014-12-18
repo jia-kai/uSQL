@@ -24,20 +24,11 @@ protected:
         t1_selector = std::make_unique<SelectExecutor>();
         dual_selector = std::make_unique<SelectExecutor>();
 
-        t0_selector->addTable(std::string("table0"), table0);
-        t0_selector->addIndex(ColumnAndTableName("table0", "c1"),
-                              t0_c1_index);
+        t0_selector->addTable(tbinfo0);
+        t1_selector->addTable(tbinfo1);
 
-        t1_selector->addTable(std::string("table1"), table1);
-        t1_selector->addIndex(ColumnAndTableName("table1", "c0"), 
-                              t1_c0_index);
-
-        dual_selector->addTable(std::string("table0"), table0);
-        dual_selector->addTable(std::string("table1"), table1);
-        dual_selector->addIndex(ColumnAndTableName("table0", "c1"),
-                                t0_c1_index);
-        dual_selector->addIndex(ColumnAndTableName("table1", "c0"),
-                                t1_c0_index);
+        dual_selector->addTable(tbinfo0);
+        dual_selector->addTable(tbinfo1);
     }
 
     std::vector<std::vector<LiteralData>> 
