@@ -46,39 +46,30 @@ void SelectExecutor::execute(std::vector<ColumnAndTableName> & dests,
                              SelectExecutor::callback_t callback) {
     dests = expand_dests(dests);
 
-    std::map<std::string, std::set<rowid_t>> rows;
-    for(auto & tbinfo: tableinfos)
-        rows[tbinfo->name].insert(WhereStatement::INCLUDE_ALL);
+    std::vector<std::set<rowid_t>> rows(tableinfos.size());
+    for(auto & row: rows)
+        row.insert(WhereStatement::INCLUDE_ALL);
 
-    std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
-    std::vector<ColumnAndTableName> names;
-    for(auto & tbinfo: tableinfos) {
-        for(size_t i = 0 ; i < tbinfo->indexes.size() ; i += 1) {
-            auto & col = tbinfo->table->columns[i];
-            auto tmp = ColumnAndTableName(tbinfo->name, col.first);
-            if(tbinfo->indexes[i])
-                indexes[tmp] = tbinfo->indexes[i];
-            names.push_back(tmp);
-        }
-    }
-    rows = where->filter(rows, indexes);
-    where->prepare_verify(names);
+    // this is important
+    where->prepare(tableinfos);
 
-    for(auto & row: rows) {
+    rows = where->filter(rows);
+
+    for(size_t i = 0 ; i < rows.size() ; i += 1) {
         usql_log("After filter: row count of `%s`: %lu", 
-                 row.first.c_str(), row.second.size());
-        if(row.second.find(WhereStatement::INCLUDE_ALL) != row.second.end())
+                 tableinfos[i]->name.c_str(), rows[i].size());
+        if(rows[i].find(WhereStatement::INCLUDE_ALL) != rows[i].end())
             usql_log("\tINCLUDE ALL");
     }
 
     dests_indexes.clear();
     callback_values.resize(dests.size());
-    verify_values.resize(names.size());
+    verify_values.resize(tableinfos.size());
     this->recursive_execute(0, rows, dests, where, callback);
 }
 
 void SelectExecutor::recursive_execute(size_t depth, 
-                                       std::map<std::string, std::set<rowid_t>> & rows,
+                                       std::vector<std::set<rowid_t>> & rows,
                                        const std::vector<ColumnAndTableName> dests,
                                        const std::unique_ptr<WhereStatement> & where,
                                        SelectExecutor::callback_t callback) {
@@ -123,8 +114,9 @@ void SelectExecutor::recursive_execute(size_t depth,
         auto & dests_index = dests_indexes[depth];
         auto verify_val_index_base = (depth == 0)?0:
             table_columns_count[depth-1];
+        verify_values[depth].clear();
         for(size_t i = 0 ; i < data.size() ; i += 1) {
-            verify_values[verify_val_index_base + i] = data[i];
+            verify_values[depth].push_back(data[i]);
             if(dests_index[i] != -1)
                 callback_values[dests_index[i]] = data[i];
         }
@@ -132,7 +124,7 @@ void SelectExecutor::recursive_execute(size_t depth,
         return true;
     };
 
-    auto & this_rows = rows[table_name];
+    auto & this_rows = rows[depth];
     if(this_rows.find(WhereStatement::INCLUDE_ALL) != this_rows.end()) {
         table->walkthrough([&, this](const Table & _table, const std::vector<LiteralData> & data) -> bool {
             return callnext_f(data);

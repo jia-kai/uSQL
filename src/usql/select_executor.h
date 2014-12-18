@@ -17,7 +17,7 @@ private:
     using callback_t = std::function<void(const std::vector<LiteralData> &)>;
 
     std::vector<LiteralData> callback_values;
-    std::vector<LiteralData> verify_values;
+    std::vector<std::vector<LiteralData>> verify_values;
 
     std::vector<std::vector<int>> dests_indexes;
     std::vector<int> table_columns_count; // for index of verify_values
@@ -25,7 +25,7 @@ private:
     auto expand_dests(std::vector<ColumnAndTableName> dests) -> decltype(dests);
 
     void recursive_execute(size_t depth, 
-                           std::map<std::string, std::set<rowid_t>> & rows,
+                           std::vector<std::set<rowid_t>> & rows,
                            const std::vector<ColumnAndTableName> dests,
                            const std::unique_ptr<WhereStatement> & where,
                            callback_t callback);

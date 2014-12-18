@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-16
+* @Last Modified time: 2014-12-18
 */
 
 #include <iostream>
@@ -11,6 +11,7 @@
 #include "./where_statement.h"
 #include "./index.h"
 #include "./table.h"
+#include "./table_info.h"
 
 using namespace usql;
 
@@ -78,28 +79,50 @@ bool WhereStatement::verify_leaf() const {
     }
 }
 
-void WhereStatement::prepare_verify(const std::vector<ColumnAndTableName> & names) {
-    if(type != WhereStatement::WhereStatementType::LEAF) {
-        for(auto & child: children)
-            child->prepare_verify(names);
-        return;
-    }
+void WhereStatement::prepare(const std::vector<std::shared_ptr<TableInfo>> & tableinfos) {
+    this->tableinfos = tableinfos;
+
     if(!a_is_literal) {
-        auto it = std::find(names.begin(), names.end(), na);
-        usql_assert(it != names.end(), "na: %s.%s not found", 
-                    na.first.c_str(), na.second.c_str());
-        verify_index_a = it - names.begin();
+        auto tbinfo = std::find_if(tableinfos.begin(), tableinfos.end(),
+                                   [&](const std::shared_ptr<TableInfo> & tbinfo) -> bool {
+                                      return tbinfo->name == na.first;
+                                   });
+        usql_assert(tbinfo != tableinfos.end(), "Table %s not found", na.first.c_str());
+        na_table_i = tbinfo - tableinfos.begin();
+
+        auto & cols = (*tbinfo)->table->columns;
+        auto col = std::find_if(cols.begin(), cols.end(),
+                                [&](const column_def_t & col) -> bool {
+                                   return col.first == na.second;
+                                });
+        usql_assert(col != cols.end(), "Col %s (of table %s) not found", 
+                    na.second.c_str(), na.first.c_str());
+        na_col_i = col - cols.begin();
     }
     if(!b_is_literal) {
-        auto it = std::find(names.begin(), names.end(), nb);
-        usql_assert(it != names.end(), "nb: %s.%s not found", 
-                    nb.first.c_str(), nb.second.c_str());
-        verify_index_b = it - names.begin();
+        auto tbinfo = std::find_if(tableinfos.begin(), tableinfos.end(),
+                                   [&](const std::shared_ptr<TableInfo> & tbinfo) -> bool {
+                                      return tbinfo->name == nb.first;
+                                   });
+        usql_assert(tbinfo != tableinfos.end(), "Table %s not found", nb.first.c_str());
+        nb_table_i = tbinfo - tableinfos.begin();
+
+        auto & cols = (*tbinfo)->table->columns;
+        auto col = std::find_if(cols.begin(), cols.end(),
+                                [&](const column_def_t & col) -> bool {
+                                   return col.first == nb.second;
+                                });
+        usql_assert(col != cols.end(), "Col %s (of table %s) not found", 
+                    nb.second.c_str(), nb.first.c_str());
+        nb_col_i = col - cols.begin();
     }
+
+    for(auto & child: children)
+        child->prepare(tableinfos);
 }
 
 
-bool WhereStatement::verify(const std::vector<LiteralData> & data,
+bool WhereStatement::verify(const std::vector<std::vector<LiteralData>> & data,
                             bool force_verify) {
     #if 0
     usql_log("In verify: type = %d, op = %d, a_is_l: %d, b_is_l: %d, need_verify: %d",
@@ -111,9 +134,9 @@ bool WhereStatement::verify(const std::vector<LiteralData> & data,
         return true;
     if(type == WhereStatement::WhereStatementType::LEAF) {
         if(!a_is_literal)
-            a = data[verify_index_a];
+            a = data[na_table_i][na_col_i];
         if(!b_is_literal)
-            b = data[verify_index_b];
+            b = data[nb_table_i][nb_col_i];
         return this->verify_leaf();
     }
 #if 0
@@ -136,10 +159,9 @@ bool WhereStatement::verify(const std::vector<LiteralData> & data,
     return false;
 }
 
-WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_rows_map_t & rows,
-                                                        WhereStatement::index_map_t & indexes) {
+WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_rows_map_t & rows) {
     if(type == WhereStatement::WhereStatementType::PASS)
-        return children[0]->filter(rows, indexes);
+        return children[0]->filter(rows);
     if(type == WhereStatement::WhereStatementType::LEAF) {
         if(a_is_literal && b_is_literal) {
             if(this->verify_leaf()) return rows;
@@ -155,16 +177,16 @@ WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_ro
         }
 
         this->normalize_leaf();
-        auto index_it = indexes.find(na);
-        if(index_it == indexes.end()){
+
+        auto & index = tableinfos[na_table_i]->indexes[na_col_i];
+        if(index == nullptr) {
             need_verify = true;
             return rows;
-        } // not indexed
-        auto & index = index_it->second;
+        }
 
         WhereStatement::table_rows_map_t copy(rows);
-        std::set<rowid_t> orig = rows[na.first];
-        std::set<rowid_t> & target = copy[na.first];
+        std::set<rowid_t> orig = rows[na_table_i];
+        std::set<rowid_t> & target = copy[na_table_i];
 
         std::set<rowid_t> ret;
         switch(op) {
@@ -229,12 +251,15 @@ WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_ro
     if(type == WhereStatement::WhereStatementType::AND) {
         WhereStatement::table_rows_map_t copy(rows);
         for(auto & child: children) {
-            auto ret = child->filter(copy, indexes);
-            for(auto & it: copy) {
-                auto table_name = it.first;
-                auto & target = it.second;
+            auto ret = child->filter(copy);
+            for(size_t i = 0 ; i < tableinfos.size() ; i += 1) {
+            // for(auto & it: copy) {
+                auto table_name = tableinfos[i]->name;
+                // auto table_name = it.first;
+                auto & target = copy[i];
+                // auto & target = it.second;
                 std::set<rowid_t> orig_target(target);
-                auto & ret_target = ret[table_name];
+                auto & ret_target = ret[i];
                 if(target.find(WhereStatement::INCLUDE_ALL) != target.end())
                     target = ret_target;
                 else {
@@ -252,17 +277,20 @@ WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_ro
     }
     if(type == WhereStatement::WhereStatementType::OR) {
         auto copy = this->empty_map(rows);
-        std::set<std::string> all_changed_tables;
+        std::set<int> all_changed_tables;
         for(auto & child: children) {
-            auto ret = child->filter(rows, indexes);
-            for(auto & it: copy) {
-                auto table_name = it.first;
-                auto & target = it.second;
+            auto ret = child->filter(rows);
+            for(size_t i = 0 ; i < tableinfos.size() ; i += 1) {
+            // for(auto & it: copy) {
+                auto table_name = tableinfos[i]->name;
+                // auto table_name = it.first;
+                auto & target = copy[i];
+                // auto & target = it.second;
                 std::set<rowid_t> orig_target(target);
-                auto & ret_target = ret[table_name];
+                auto & ret_target = ret[i];
                 // check if multiple table exists
                 if(orig_target.size() != ret_target.size())
-                    all_changed_tables.insert(table_name);
+                    all_changed_tables.insert(i);
                 target.clear();
                 std::set_union(orig_target.begin(), orig_target.end(),
                                ret_target.begin(), ret_target.end(),
@@ -282,7 +310,7 @@ WhereStatement::table_rows_map_t WhereStatement::filter(WhereStatement::table_ro
 
 WhereStatement::table_rows_map_t WhereStatement::empty_map(WhereStatement::table_rows_map_t rows) const {
     for(auto & it: rows)
-        it.second.clear();
+        it.clear();
     return rows;
 }
 

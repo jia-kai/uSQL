@@ -11,6 +11,8 @@ using namespace usql;
 
 namespace usql {
 
+class TableInfo;
+
 using ColumnAndTableName = std::pair<std::string, std::string>;
 
 class WhereStatement {
@@ -37,26 +39,31 @@ public:
 
     bool need_verify = false;
 
+public:
+    void normalize();
+    void setDefaultTable(const std::string & tb_name);
+    std::ostream & print(std::ostream & stream) const;
+
 private:
-    int verify_index_a = -1, verify_index_b = -1;
+    int na_table_i = -1, na_col_i = -1;
+    int nb_table_i = -1, nb_col_i = -1;
+    // int verify_index_a = -1, verify_index_b = -1; // index in verify_data
+    // int table_index_a = -1, table_index_a = -1; // index in rows
+    // int index_index_a = -1, index_index_a = -1; // index in indexes
+
+    std::vector<std::shared_ptr<TableInfo>> tableinfos;
 
 public:
-    void prepare_verify(const std::vector<ColumnAndTableName> & names);
-    bool verify(const std::vector<LiteralData> & data,
+    void prepare(const std::vector<std::shared_ptr<TableInfo>> & tableinfos);
+
+    bool verify(const std::vector<std::vector<LiteralData>> & data,
                 bool force_verify = false);
 
     static const rowid_t INCLUDE_ALL;
 
-    using table_rows_map_t = std::map<std::string, std::set<rowid_t>>;
-    using index_map_t = std::map<ColumnAndTableName, std::shared_ptr<IndexBase>>;
+    using table_rows_map_t = std::vector<std::set<rowid_t>>;
 
-    std::ostream & print(std::ostream & stream) const;
-
-    table_rows_map_t filter(table_rows_map_t & rows,
-                            index_map_t & indexes);
-
-    void normalize();
-    void setDefaultTable(const std::string & tb_name);
+    table_rows_map_t filter(table_rows_map_t & rows);
 
 private:
     void revert();
