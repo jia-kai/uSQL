@@ -25,7 +25,7 @@ protected:
         std::vector<rowid_t> ret;
 
         auto exe = std::make_unique<InsertExecutor>(table0, 
-                                                    stmt.insert_columns);
+                                                    stmt.column_names);
         exe->addIndex("c1", t0_c1_index);
         for(auto & vals: stmt.values)
             ret.push_back(exe->insert(vals));

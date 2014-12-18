@@ -34,7 +34,7 @@ private:
 
 public:
     InsertExecutor(std::shared_ptr<Table> t, 
-                   std::vector<std::string> cols);
+                   std::vector<ColumnAndTableName> cols);
     void addIndex(std::string name, std::shared_ptr<IndexBase> index);
 
 public:

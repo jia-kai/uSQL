@@ -42,18 +42,13 @@ public:
     Type type;
 
     std::string database_name; // for *_DB
-
     std::vector<std::string> table_names; // for *_TB, delete, update, *_IDX, select
+    std::vector<ColumnAndTableName> column_names; // for SELECT, INSERT, UPDATE
 
-    std::vector<ColumnAndTableName> select_vals;
+    std::vector<std::vector<LiteralData>> values; // for INSERT, UPDATE
 
     std::vector<column_def_t> column_defs; // for create_tb
     std::map<std::string, std::set<ColumnConstraint>> column_constraints; // for create_tb
-
-    std::vector<std::string> insert_columns;
-    std::vector<std::vector<LiteralData>> values; // for insert
-
-    std::map<std::string, LiteralData> update_vals; // for update
 
     std::unique_ptr<WhereStatement> where_stmt = nullptr; // for delete, update, select
 

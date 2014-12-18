@@ -61,9 +61,9 @@ ostream & SQLStatement::print(ostream & stream) {
             break;
         case SQLStatement::Type::SELECT:
             stream << "SELECT ";
-            for(size_t i = 0 ; i < select_vals.size() ; i += 1) {
+            for(size_t i = 0 ; i < column_names.size() ; i += 1) {
                 if (i != 0) stream << ", ";
-                stream << select_vals[i].first << "." << select_vals[i].second ;
+                stream << column_names[i].first << "." << column_names[i].second ;
             }
             stream << " FROM ";
             for(size_t i = 0 ; i < table_names.size() ; i += 1) {
@@ -77,11 +77,11 @@ ostream & SQLStatement::print(ostream & stream) {
             break;
         case SQLStatement::Type::INSERT:
             stream << "INSERT INTO " << table_names[0] << " ";
-            if(!insert_columns.empty()) {
+            if(!column_names.empty()) {
                 stream << "(";
-                for(size_t i = 0 ; i < insert_columns.size() ; i += 1){
+                for(size_t i = 0 ; i < column_names.size() ; i += 1){
                     if(i != 0) stream << ", ";
-                    stream << insert_columns[i];
+                    stream << column_names[i].second;
                 }
                 stream << ") ";
             }
@@ -127,11 +127,9 @@ void SQLStatement::normalize() {
         where_stmt->b = LiteralData(0); 
     }
     where_stmt->normalize();
-    
-    if(type == SQLStatement::Type::SELECT) {
-        for(auto & val: select_vals)
-            if(val.first.length() == 0)
-                val.first = table_names[0];
-        where_stmt->setDefaultTable(table_names[0]);
-    }
+
+    for(auto & val: column_names)
+        if(val.first.length() == 0)
+            val.first = table_names[0];
+    where_stmt->setDefaultTable(table_names[0]);
 }

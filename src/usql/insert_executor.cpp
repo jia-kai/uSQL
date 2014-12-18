@@ -66,11 +66,15 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
 }
 
 InsertExecutor::InsertExecutor(std::shared_ptr<Table> t, 
-                               std::vector<std::string> cols):
-table(t), column_names(cols) {
-    if(column_names.empty())
+                               std::vector<ColumnAndTableName> cols):
+table(t) {
+    if(cols.empty()) {
         for(auto & col: table->columns)
             column_names.push_back(col.first);
+    } else {
+        for(auto & col: cols)
+            column_names.push_back(col.second);
+    }
     for(size_t i = 0 ; i < table->columns.size() ; i += 1)
         indexes.emplace_back(); // nullptr
 }

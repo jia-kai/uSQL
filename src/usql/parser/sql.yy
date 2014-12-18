@@ -96,11 +96,11 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                          driver.type = usql::SQLStatement::Type::CREATE_TB;
                          driver.table_names.push_back(*($3));
                       }
-                    | SELECT select_vals FROM tables WHERE where_stmt END {
+                    | SELECT column_names FROM tables WHERE where_stmt END {
                         driver.type = usql::SQLStatement::Type::SELECT;
                         driver.where_stmt = std::unique_ptr<usql::WhereStatement>($6); $6 = nullptr;
                     }
-                    | SELECT select_vals FROM tables END {
+                    | SELECT column_names FROM tables END {
                         driver.type = usql::SQLStatement::Type::SELECT;
                         driver.where_stmt = nullptr;
                     }
@@ -110,10 +110,7 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     }
                     ;
 
-insert_columns      : | '(' insert_columns_elem ')' ;
-insert_columns_elem : IDENTIFIER { driver.insert_columns.push_back(*($1)); }
-                    | insert_columns_elem ',' IDENTIFIER {driver.insert_columns.push_back(*($3)); }
-                    ;
+insert_columns      : | '(' column_names ')' ;
 
 insert_values       : '(' literal_datas ')' {
                         driver.values.push_back(*($2));
@@ -123,8 +120,8 @@ insert_values       : '(' literal_datas ')' {
                     }
                     ;
 
-select_vals         : column_and_table_or_expand { driver.select_vals.push_back(*($1)); }
-                    | select_vals ',' column_and_table_or_expand { driver.select_vals.push_back(*($3)); }
+column_names        : column_and_table_or_expand { driver.column_names.push_back(*($1)); }
+                    | column_names ',' column_and_table_or_expand { driver.column_names.push_back(*($3)); }
                     ;
 
 tables              : IDENTIFIER { driver.table_names.push_back(*($1)); }

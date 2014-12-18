@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-16
+* @Last Modified time: 2014-12-18
 */
 
 #include <iostream>
@@ -59,7 +59,7 @@ protected:
         if(debug) stmt.setDebug(true);
         EXPECT_EQ(stmt.parse(), 0);
         stmt.normalize();
-        return select(selector, stmt.select_vals, stmt.where_stmt);
+        return select(selector, stmt.column_names, stmt.where_stmt);
     }
 };
 
