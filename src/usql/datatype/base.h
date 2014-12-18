@@ -51,7 +51,7 @@ public:
     std::ostream & print(std::ostream & stream) const {
         switch(datatype) {
             case DataType::INT: stream << int_v ; break; 
-            case DataType::STRING: stream << string_v ; break;
+            case DataType::STRING: stream << "\"" << string_v << "\"" ; break;
             default: break;
         }
         return stream;
@@ -82,6 +82,8 @@ public:
 
     virtual DataType type_id() const = 0;
     virtual std::string type_name() const = 0;
+
+    virtual LiteralData make_default() const = 0;
 
     LiteralData load(const void * src) const;
     void dump(void * dest, const LiteralData & data) const;

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-04
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-05
+* @Last Modified time: 2014-12-18
 */
 
 #include <iostream>
@@ -25,9 +25,11 @@ Table::Table(PageIO & page_io,
              rowid_updator_t updator):
 BTree<rowid_t>(page_io, compute_payload_size(cols)),
 columns(cols),
-constraints(cons),
 maxrow(mr),
 maxrow_updator(updator){
+
+    for(auto & col: columns)
+        constraints.push_back(cons[col.first]);
 
 }
 

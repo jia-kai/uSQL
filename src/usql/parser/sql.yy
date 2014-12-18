@@ -44,6 +44,7 @@
     usql::DataTypeBase * datatype;
     usql::SQLStatement::ColumnConstraint column_constraint;
     usql::LiteralData * literal_data;
+    std::vector<usql::LiteralData> * literal_datas;
     usql::WhereStatement::WhereStatementOperator where_op;
     usql::WhereStatement * where_stmt;
     ColumnAndTableName * column_and_table;
@@ -53,6 +54,7 @@
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <datatype>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <stringdata>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <literal_data>
+%destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <literal_datas>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <where_stmt>
 %destructor { if ($$)  { delete ($$); ($$) = nullptr; } } <column_and_table>
 
@@ -62,6 +64,7 @@
 %token <column_constraint>  COLUMN_CONSTRAINT
 
 %type <literal_data> literal_data
+%type <literal_datas> literal_datas
 %type <where_stmt> where_stmt
 %type <column_and_table> column_and_table column_and_table_or_expand
 
@@ -70,6 +73,7 @@
 
 %token CREATE TABLE DATABASE DROP SHOW USE
 %token FROM SELECT WHERE
+%token INSERT INTO VALUES
 
 %token AND OR NOT
 
@@ -99,6 +103,23 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     | SELECT select_vals FROM tables END {
                         driver.type = usql::SQLStatement::Type::SELECT;
                         driver.where_stmt = nullptr;
+                    }
+                    | INSERT INTO IDENTIFIER insert_columns VALUES insert_values END {
+                        driver.type = usql::SQLStatement::Type::INSERT;
+                        driver.table_names.push_back(*($3));
+                    }
+                    ;
+
+insert_columns      : | '(' insert_columns_elem ')' ;
+insert_columns_elem : IDENTIFIER { driver.insert_columns.push_back(*($1)); }
+                    | insert_columns_elem ',' IDENTIFIER {driver.insert_columns.push_back(*($3)); }
+                    ;
+
+insert_values       : '(' literal_datas ')' {
+                        driver.values.push_back(*($2));
+                    }
+                    | insert_values ',' '(' literal_datas ')' {
+                        driver.values.push_back(*($4));
                     }
                     ;
 
@@ -204,6 +225,17 @@ datatype            : INT {$$ = new usql::IntDataType(); }
 
 literal_data        : LITERAL_STRING { $$ = new usql::LiteralData(*($1)); }
                     | INTEGER        { $$ = new usql::LiteralData($1); }
+                    ;
+
+literal_datas       : literal_data {
+                        $$ = new std::vector<usql::LiteralData>();
+                        $$->push_back(*($1));
+                    }
+                    | literal_datas ',' literal_data {
+                        $1->push_back(*($3));
+                        $$ = $1;
+                        $1 = nullptr;
+                    }
                     ;
 
 

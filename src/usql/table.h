@@ -22,7 +22,8 @@ private:
 
 public:
     std::vector<column_def_t> columns;
-    std::map<std::string, column_constraints_t> constraints;
+    std::vector<column_constraints_t> constraints;
+    // std::map<std::string, column_constraints_t> constraints;
 
 protected:
     rowid_t maxrow = 0;

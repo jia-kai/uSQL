@@ -48,6 +48,9 @@ using token = usql::SQLParser::token;
 (?i:"SELECT")       { return token::SELECT; }
 (?i:"FROM")         { return token::FROM; }
 (?i:"WHERE")        { return token::WHERE; }
+(?i:"INSERT")       { return token::INSERT; }
+(?i:"INTO")         { return token::INTO; }
+(?i:"VALUES")       { return token::VALUES; }
 
 (?i:"AND")          { return token::AND; }
 (?i:"OR")           { return token::OR; }

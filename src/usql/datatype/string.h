@@ -35,6 +35,10 @@ public:
         return ssprintf("VARCHAR(%zd)", max_size);
     }
 
+    LiteralData make_default() const override {
+        return LiteralData(std::string(""));
+    }
+
 public:
 
     using hash_result_type = std::hash<std::string>::result_type;

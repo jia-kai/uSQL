@@ -42,6 +42,10 @@ public:
         return "INT";
     }
 
+    LiteralData make_default() const override {
+        return LiteralData(0);
+    }
+
 private:
     using IndexTree = BTree<KeyWithRowID<int64_t>>;
     std::unique_ptr<IndexTree> index_tree = nullptr;

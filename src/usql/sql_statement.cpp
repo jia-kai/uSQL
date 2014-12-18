@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-16
+* @Last Modified time: 2014-12-18
 */
 
 #include "./sql_statement.h"
@@ -73,6 +73,27 @@ ostream & SQLStatement::print(ostream & stream) {
             if(where_stmt) {
                 stream << " WHERE ";
                 where_stmt->print(stream);
+            }
+            break;
+        case SQLStatement::Type::INSERT:
+            stream << "INSERT INTO " << table_names[0] << " ";
+            if(!insert_columns.empty()) {
+                stream << "(";
+                for(size_t i = 0 ; i < insert_columns.size() ; i += 1){
+                    if(i != 0) stream << ", ";
+                    stream << insert_columns[i];
+                }
+                stream << ") ";
+            }
+            stream << "VALUES ";
+            for(size_t i = 0 ; i < values.size() ; i += 1) {
+                if(i != 0) stream << ", ";
+                stream << "(";
+                for(size_t j = 0 ; j < values[i].size() ; j += 1) {
+                    if(j != 0) stream << ", ";
+                    values[i][j].print(stream);
+                }
+                stream << ")";
             }
             break;
         default:

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-15
+* @Last Modified time: 2014-12-18
 */
 
 
@@ -30,7 +30,7 @@ protected:
         PageIOTestEnv::SetUp();
         // create table0
         std::string sql0("create table table0"
-                   "(c0 int primary key, c1 int unique, c2 varchar(128))");
+                   "(c0 int, c1 int unique, c2 varchar(128) NOT NULL)");
         SQLStatement stmt0(sql0);
         usql_assert(0 == stmt0.parse(), "table0 parse error");
         stmt0.normalize();

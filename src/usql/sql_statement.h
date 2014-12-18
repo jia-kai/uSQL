@@ -50,6 +50,7 @@ public:
     std::vector<column_def_t> column_defs; // for create_tb
     std::map<std::string, std::set<ColumnConstraint>> column_constraints; // for create_tb
 
+    std::vector<std::string> insert_columns;
     std::vector<std::vector<LiteralData>> values; // for insert
 
     std::map<std::string, LiteralData> update_vals; // for update
