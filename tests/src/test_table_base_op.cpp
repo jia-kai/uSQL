@@ -79,9 +79,9 @@ TEST_F(TableBaseOPTest, basic) {
     ASSERT_DEATH(table->insert(row1), ".*");
 
     int count = 0;
-    table->walkthrough([&](const Table & t, const std::vector<LiteralData> & v)->bool {
+    table->walkthrough([&](rowid_t rowid, const std::vector<LiteralData> & v)->bool {
         count += 1;
-        return true;
+        return false;
     });
     ASSERT_EQ(count, 5);
 } 

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-19
 */
 
 #include <iostream>
@@ -101,8 +101,6 @@ void SelectExecutor::recursive_execute(size_t depth,
         }
         dests_indexes.push_back(dests_index);
 
-        table_columns_count.push_back(table->columns.size());
-
         usql_log("Dests_index for table %lu:", depth);
         for(size_t i = 0 ; i < dests_index.size() ; i += 1)
             usql_log("\t%lu -> %d", i, dests_index[i]);
@@ -112,8 +110,6 @@ void SelectExecutor::recursive_execute(size_t depth,
         // WTF: must calculate dests_index every time we use it
         // because the memory location of dests_indexes may change
         auto & dests_index = dests_indexes[depth];
-        auto verify_val_index_base = (depth == 0)?0:
-            table_columns_count[depth-1];
         verify_values[depth].clear();
         for(size_t i = 0 ; i < data.size() ; i += 1) {
             verify_values[depth].push_back(data[i]);
@@ -121,12 +117,12 @@ void SelectExecutor::recursive_execute(size_t depth,
                 callback_values[dests_index[i]] = data[i];
         }
         recursive_execute(depth+1, rows, dests, where, callback);
-        return true;
+        return false;
     };
 
     auto & this_rows = rows[depth];
     if(this_rows.find(WhereStatement::INCLUDE_ALL) != this_rows.end()) {
-        table->walkthrough([&, this](const Table & _table, const std::vector<LiteralData> & data) -> bool {
+        table->walkthrough([&, this](rowid_t rowid, const std::vector<LiteralData> & data) -> bool {
             return callnext_f(data);
         });
     } else {

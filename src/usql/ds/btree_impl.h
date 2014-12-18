@@ -612,6 +612,13 @@ DEF(void, Iterator::load) (const PageIO::Page &page) {
     m_max_offset = m_cur_offset + hdr->nr_item * m_btree.m_leaf_item_size;
 }
 
+DEF(void, Iterator::recalc) (const Key & key) {
+    auto it = m_btree.lookup(key, false);
+    m_cur_page = it.m_cur_page;
+    m_cur_offset = it.m_cur_offset;
+    m_max_offset = it.m_max_offset;
+}
+
 DEF(const Key&, Iterator::key) () const {
     usql_assert(valid());
     return reinterpret_cast<const typename LeafHeader::Item*>(

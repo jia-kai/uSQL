@@ -74,6 +74,7 @@
 %token CREATE TABLE DATABASE DROP SHOW USE
 %token FROM SELECT WHERE
 %token INSERT INTO VALUES
+%token DELETE
 
 %token AND OR NOT
 
@@ -107,6 +108,16 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     | INSERT INTO IDENTIFIER insert_columns VALUES insert_values END {
                         driver.type = usql::SQLStatement::Type::INSERT;
                         driver.table_names.push_back(*($3));
+                    }
+                    | DELETE FROM IDENTIFIER END {
+                        driver.type = usql::SQLStatement::Type::DELETE;
+                        driver.table_names.push_back(*($3));
+                        driver.where_stmt = nullptr;
+                    }
+                    | DELETE FROM IDENTIFIER WHERE where_stmt END {
+                        driver.type = usql::SQLStatement::Type::DELETE;
+                        driver.table_names.push_back(*($3));
+                        driver.where_stmt = std::unique_ptr<usql::WhereStatement>($5); $5 = nullptr;
                     }
                     ;
 

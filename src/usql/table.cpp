@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-04
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-19
 */
 
 #include <iostream>
@@ -70,9 +70,11 @@ std::vector<LiteralData> Table::find(rowid_t rowid) {
 void Table::walkthrough(row_callback_t callback) {
     auto it = this->lookup(0, false);
     while(it.valid()) {
-        auto continue_ = callback(*this, load_data(it));
-        if(!continue_)
-            break;
-        it.next();
+        auto key = it.key();
+        auto removed = callback(it.key(), load_data(it));
+        if(removed)
+            it.recalc(key);
+        else 
+            it.next();
     }
 }

@@ -14,7 +14,8 @@ using rowid_updator_t = std::function<void(const rowid_t)>;
 
 class Table;
 
-using row_callback_t = std::function<bool(const Table &, const std::vector<LiteralData> &)>;
+// return true if it's been removed by callback so that I need to re-calc it
+using row_callback_t = std::function<bool(rowid_t, const std::vector<LiteralData> &)>;
 
 class Table: public BTree<rowid_t> {
 private:

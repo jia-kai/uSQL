@@ -20,7 +20,6 @@ private:
     std::vector<std::vector<LiteralData>> verify_values;
 
     std::vector<std::vector<int>> dests_indexes;
-    std::vector<int> table_columns_count; // for index of verify_values
 
     auto expand_dests(std::vector<ColumnAndTableName> dests) -> decltype(dests);
 

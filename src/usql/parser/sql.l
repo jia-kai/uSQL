@@ -51,6 +51,7 @@ using token = usql::SQLParser::token;
 (?i:"INSERT")       { return token::INSERT; }
 (?i:"INTO")         { return token::INTO; }
 (?i:"VALUES")       { return token::VALUES; }
+(?i:"DELETE")       { return token::DELETE; }
 
 (?i:"AND")          { return token::AND; }
 (?i:"OR")           { return token::OR; }

@@ -105,6 +105,7 @@ class BTree<Key, KeyLess>::Iterator {
     void load(const PageIO::Page &page);
 
     public:
+        void recalc(const Key & key);
         const Key& key() const;
         void* payload();
 
