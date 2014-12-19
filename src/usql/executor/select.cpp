@@ -7,9 +7,8 @@
 
 #include <iostream>
 #include <algorithm>
-#include "./select_executor.h"
-#include "./where_statement.h"
-#include "./index.h"
+#include "./select.h"
+#include "../index.h"
 
 using namespace usql;
 

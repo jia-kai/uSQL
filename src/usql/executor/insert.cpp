@@ -2,10 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-19
 */
 
-#include "./insert_executor.h"
+#include "./insert.h"
 #include <algorithm>
 
 using namespace usql;

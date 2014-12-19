@@ -1,11 +1,11 @@
 #ifndef __usql_select_excutor_h__
 #define __usql_select_excutor_h__ value
 
-#include "./sql_statement.h"
-#include "./table.h"
-#include "./datatype/base.h"
-#include "./where_statement.h"
-#include "./table_info.h"
+#include "../sql_statement.h"
+#include "../table.h"
+#include "../datatype/base.h"
+#include "../where_statement.h"
+#include "../table_info.h"
 
 using namespace usql;
 

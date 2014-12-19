@@ -103,6 +103,18 @@ ostream & SQLStatement::print(ostream & stream) {
                 where_stmt->print(stream);
             }
             break;
+        case SQLStatement::Type::UPDATE:
+            stream << "UPDATE " << table_names[0] << " SET ";
+            for(size_t i = 0 ; i < column_names.size() ; i += 1) {
+                if(i != 0) stream << ", ";
+                stream << column_names[i].second << " = ";
+                values[0][i].print(stream);
+            }
+            if(where_stmt) {
+                stream << " WHERE ";
+                where_stmt->print(stream);
+            }
+            break;
         default:
             stream << "NOT IMPLEMENTED";
             break;

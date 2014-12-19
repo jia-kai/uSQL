@@ -6,7 +6,7 @@
 */
 
 #include <iostream>
-#include "./delete_executor.h"
+#include "./delete.h"
 
 using namespace usql;
 

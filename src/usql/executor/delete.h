@@ -2,17 +2,17 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-19
 */
 
 #ifndef __usql_delete_executor_h__
 #define __usql_delete_executor_h__ value
 
-#include "./sql_statement.h"
-#include "./table.h"
-#include "./index.h"
-#include "./where_statement.h"
-#include "./table_info.h"
+#include "../sql_statement.h"
+#include "../table.h"
+#include "../index.h"
+#include "../where_statement.h"
+#include "../table_info.h"
 
 using namespace usql;
 

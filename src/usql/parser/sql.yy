@@ -75,6 +75,7 @@
 %token FROM SELECT WHERE
 %token INSERT INTO VALUES
 %token DELETE
+%token UPDATE SET
 
 %token AND OR NOT
 
@@ -97,27 +98,38 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                          driver.type = usql::SQLStatement::Type::CREATE_TB;
                          driver.table_names.push_back(*($3));
                       }
-                    | SELECT column_names FROM tables WHERE where_stmt END {
+                    | SELECT column_names FROM tables where_or_empty END {
                         driver.type = usql::SQLStatement::Type::SELECT;
-                        driver.where_stmt = std::unique_ptr<usql::WhereStatement>($6); $6 = nullptr;
-                    }
-                    | SELECT column_names FROM tables END {
-                        driver.type = usql::SQLStatement::Type::SELECT;
-                        driver.where_stmt = nullptr;
                     }
                     | INSERT INTO IDENTIFIER insert_columns VALUES insert_values END {
                         driver.type = usql::SQLStatement::Type::INSERT;
                         driver.table_names.push_back(*($3));
                     }
-                    | DELETE FROM IDENTIFIER END {
+                    | DELETE FROM IDENTIFIER where_or_empty END {
                         driver.type = usql::SQLStatement::Type::DELETE;
                         driver.table_names.push_back(*($3));
-                        driver.where_stmt = nullptr;
                     }
-                    | DELETE FROM IDENTIFIER WHERE where_stmt END {
-                        driver.type = usql::SQLStatement::Type::DELETE;
-                        driver.table_names.push_back(*($3));
-                        driver.where_stmt = std::unique_ptr<usql::WhereStatement>($5); $5 = nullptr;
+                    | UPDATE IDENTIFIER SET update_values where_or_empty END {
+                        driver.type = usql::SQLStatement::Type::UPDATE;
+                        driver.table_names.push_back(*($2));
+                    }
+                    ;
+
+update_values       : column_and_table '=' literal_data {
+                        driver.column_names.push_back(*($1));
+                        driver.values.emplace_back();
+                        driver.values[0].push_back(*($3));
+                    }
+                    | update_values ',' column_and_table '=' literal_data {
+                        driver.column_names.push_back(*($3));
+                        driver.values[0].push_back(*($5));
+                    }
+                    ;
+
+where_or_empty      : { driver.where_stmt = nullptr; }
+                    | WHERE where_stmt {
+                        driver.where_stmt = std::unique_ptr<usql::WhereStatement>($2); 
+                        $2 = nullptr;
                     }
                     ;
 

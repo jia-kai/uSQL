@@ -8,7 +8,7 @@
 #include <iostream>
 #include "./table_and_index_env.h"
 
-#include "usql/delete_executor.h"
+#include "usql/executor/delete.h"
 
 using namespace usql;
 
