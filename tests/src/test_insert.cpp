@@ -24,8 +24,14 @@ protected:
 
         std::vector<rowid_t> ret;
 
-        auto exe = std::make_unique<InsertExecutor>(tbinfo0, 
-                                                    stmt.column_names);
+        std::vector<std::shared_ptr<TableInfo>> tableinfos{tbinfo0};
+
+        std::unique_ptr<InsertExecutor> exe;
+        if(stmt.column_names.empty())
+            exe = std::make_unique<InsertExecutor>(tableinfos);
+        else
+            exe = std::make_unique<InsertExecutor>(tableinfos, 
+                                                   stmt.column_names);
         for(auto & vals: stmt.values)
             ret.push_back(exe->insert(vals));
         return ret;

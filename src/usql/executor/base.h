@@ -42,7 +42,14 @@ protected:
 
 public:
     BaseExecutor(std::vector<std::shared_ptr<TableInfo>> tableinfos):
-        tableinfos(tableinfos) {}
+        tableinfos(tableinfos) {
+            this->setFullColumns();
+        }
+    BaseExecutor(std::vector<std::shared_ptr<TableInfo>> tableinfos, 
+                 std::vector<ColumnAndTableName> target_columns):
+        tableinfos(tableinfos) {
+            this->setTargetColumns(target_columns);
+        }
     void find(const std::unique_ptr<WhereStatement> & where, 
               callback_t callback);
 };

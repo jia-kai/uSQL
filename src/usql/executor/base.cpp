@@ -13,6 +13,7 @@ using namespace usql;
 void BaseExecutor::setTargetColumns(std::vector<ColumnAndTableName> target_columns) {
     this->target_columns = target_columns;
 
+    target_columns_index.clear();
     for(auto & tableinfo: tableinfos) {
         target_columns_index.emplace_back();
         for(auto & col: tableinfo->table->columns) {

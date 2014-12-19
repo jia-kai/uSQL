@@ -28,7 +28,6 @@ public:
     std::set<rowid_t> execute(std::unique_ptr<WhereStatement> where_stmt) {
 
         usql_assert(tableinfos.size() == 1, "Only one table is allowed in delete statement");
-        this->setFullColumns();
 
         std::set<rowid_t> ret;
         this->find(where_stmt, [&](rowid_t rowid, const std::vector<LiteralData> & vals) -> bool {

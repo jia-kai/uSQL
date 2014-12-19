@@ -11,6 +11,8 @@
 #include "../sql_statement.h"
 #include "../table_info.h"
 
+#include "./base.h"
+
 using namespace usql;
 
 namespace usql {
@@ -23,23 +25,9 @@ public:
     const char * what() const noexcept override {return reason.c_str(); }
 };
 
-class InsertExecutor {
-
-private:
-    std::shared_ptr<Table> table;
-
-private:
-    std::shared_ptr<TableInfo> tableinfo;
-
-    // to insert
-    std::vector<std::string> column_names;
-    std::vector<int> column_indexes; // table to me
-
+class InsertExecutor: public BaseExecutor {
 public:
-    InsertExecutor(std::shared_ptr<TableInfo> tableinfo,
-                   std::vector<ColumnAndTableName> cols);
-
-public:
+    using BaseExecutor::BaseExecutor;
     rowid_t insert(const std::vector<LiteralData> & vals);
 };
 
