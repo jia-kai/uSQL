@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-19
 */
 
 #include "./sql_statement.h"
@@ -94,6 +94,13 @@ ostream & SQLStatement::print(ostream & stream) {
                     values[i][j].print(stream);
                 }
                 stream << ")";
+            }
+            break;
+        case SQLStatement::Type::DELETE:
+            stream << "DELETE FROM " << table_names[0];
+            if(where_stmt) {
+                stream << " WHERE ";
+                where_stmt->print(stream);
             }
             break;
         default:
