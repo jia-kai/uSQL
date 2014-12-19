@@ -7,49 +7,25 @@
 #include "../where_statement.h"
 #include "../table_info.h"
 
+#include "./base.h"
+
 using namespace usql;
 
 namespace usql {
-    
-class SelectExecutor {
+
+class SelectExecutor: public BaseExecutor {
 
 private:
-    using callback_t = std::function<void(const std::vector<LiteralData> &)>;
-
-    std::vector<LiteralData> callback_values;
-    std::vector<std::vector<LiteralData>> verify_values;
-
-    std::vector<std::vector<int>> dests_indexes;
-
     auto expand_dests(std::vector<ColumnAndTableName> dests) -> decltype(dests);
 
-    void recursive_execute(size_t depth, 
-                           std::vector<std::set<rowid_t>> & rows,
-                           const std::vector<ColumnAndTableName> dests,
-                           const std::unique_ptr<WhereStatement> & where,
-                           callback_t callback);
-
-protected:
-    std::vector<std::shared_ptr<TableInfo>> tableinfos;
-    // std::vector<std::pair<std::string, std::shared_ptr<Table>>> tables;
-    // std::map<ColumnAndTableName, std::shared_ptr<IndexBase>> indexes;
-
 public:
-    SelectExecutor() = default;
-    void addTable(std::shared_ptr<TableInfo> info) {
-        tableinfos.push_back(info);
+    SelectExecutor(std::vector<std::shared_ptr<TableInfo>> tableinfos, 
+                   std::vector<ColumnAndTableName> target_columns):
+    BaseExecutor(tableinfos) {
+        this->setTargetColumns(expand_dests(target_columns));
     }
-    // void addTable(std::string name, std::shared_ptr<Table> t){
-    //     tables.emplace_back(name, t);
-    // }
-    // void addIndex(ColumnAndTableName name, std::shared_ptr<IndexBase> index) {
-    //     indexes[name] = index;
-    // }
 
-    void execute(std::vector<ColumnAndTableName> & dests, 
-                 const std::unique_ptr<WhereStatement> & where,
-                 callback_t callback);
-
+    // using find = BaseExecutor::find;
 };
 
 }

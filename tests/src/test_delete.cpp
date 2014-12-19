@@ -23,7 +23,9 @@ protected:
         stmt.print(std::cerr);
         std::cerr << std::endl;
 
-        auto exe = std::make_unique<DeleteExecutor>(tbinfo0);
+        std::vector<std::shared_ptr<TableInfo>> tableinfos { tbinfo0 };
+
+        auto exe = std::make_unique<DeleteExecutor>(tableinfos);
         return exe->execute(std::move(stmt.where_stmt));
     }
 };
