@@ -115,14 +115,18 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     }
                     ;
 
-update_values       : column_and_table '=' literal_data {
-                        driver.column_names.push_back(*($1));
-                        driver.values.emplace_back();
-                        driver.values[0].push_back(*($3));
+update_values       : column_and_table WHERE_OP literal_data {
+                        if($2 == usql::WhereStatement::WhereStatementOperator::EQ) {
+                            driver.column_names.push_back(*($1));
+                            driver.values.emplace_back();
+                            driver.values[0].push_back(*($3));
+                        }
                     }
-                    | update_values ',' column_and_table '=' literal_data {
-                        driver.column_names.push_back(*($3));
-                        driver.values[0].push_back(*($5));
+                    | update_values ',' column_and_table WHERE_OP literal_data {
+                        if($4 == usql::WhereStatement::WhereStatementOperator::EQ) {
+                            driver.column_names.push_back(*($3));
+                            driver.values[0].push_back(*($5));
+                        }
                     }
                     ;
 

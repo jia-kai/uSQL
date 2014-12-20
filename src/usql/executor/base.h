@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 #ifndef __usql_executor_base_h__
 #define __usql_executor_base_h__ value
@@ -28,7 +28,8 @@ private:
     void recursive_find(size_t depth, 
                         std::vector<std::set<rowid_t>> & rows,
                         const std::unique_ptr<WhereStatement> & where,
-                        callback_t callback);
+                        callback_t callback,
+                        bool callback_all);
 
 protected:
     std::vector<std::shared_ptr<TableInfo>> tableinfos;
@@ -40,10 +41,12 @@ protected:
     void setTargetColumns(std::vector<ColumnAndTableName> target_columns);
     void setFullColumns();
 
+    bool check_constraint(std::shared_ptr<TableInfo> tableinfo, 
+                          size_t number, const LiteralData & val);
+
 public:
     BaseExecutor(std::vector<std::shared_ptr<TableInfo>> tableinfos):
         tableinfos(tableinfos) {
-            this->setFullColumns();
         }
     BaseExecutor(std::vector<std::shared_ptr<TableInfo>> tableinfos, 
                  std::vector<ColumnAndTableName> target_columns):
@@ -51,7 +54,7 @@ public:
             this->setTargetColumns(target_columns);
         }
     void find(const std::unique_ptr<WhereStatement> & where, 
-              callback_t callback);
+              callback_t callback, bool callback_all = false);
 };
 
 }

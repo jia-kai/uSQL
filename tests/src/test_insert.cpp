@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 
 #include <iostream>
@@ -26,12 +26,8 @@ protected:
 
         std::vector<std::shared_ptr<TableInfo>> tableinfos{tbinfo0};
 
-        std::unique_ptr<InsertExecutor> exe;
-        if(stmt.column_names.empty())
-            exe = std::make_unique<InsertExecutor>(tableinfos);
-        else
-            exe = std::make_unique<InsertExecutor>(tableinfos, 
-                                                   stmt.column_names);
+        auto exe = std::make_unique<InsertExecutor>(tableinfos, 
+                                                    stmt.column_names);
         for(auto & vals: stmt.values)
             ret.push_back(exe->insert(vals));
         return ret;

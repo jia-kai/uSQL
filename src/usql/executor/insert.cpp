@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 
 #include "./insert.h"
@@ -35,18 +35,8 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
         else 
             full_vals.push_back(vals[target_index[i]]);
 
-        // check primary / unique
-        auto & cons = tableinfo->constraints[i];
-        auto & val = full_vals.back();
-        auto & index = tableinfo->indexes[i];
-        if(cons.find(SQLStatement::ColumnConstraint::PRIMARY) != cons.end() || 
-           cons.find(SQLStatement::ColumnConstraint::UNIQUE) != cons.end()) {
-            usql_assert(index, "Index must exists for Primary or Unique column");
-            auto rows = index->find(IndexBase::BoundType::INCLUDE, val,
-                                    IndexBase::BoundType::INCLUDE, val);
-            if(!rows.empty())
-                throw InsertException("Column not unique");
-        }
+        if(!this->check_constraint(tableinfo, i, full_vals.back()))
+            throw InsertException("Column not unique");
     }
 
     auto ret = tableinfo->table->insert(full_vals);

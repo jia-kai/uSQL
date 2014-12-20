@@ -39,6 +39,14 @@ public:
 
     virtual ~IndexBase() = default;
 
+    std::set<rowid_t> find() {
+        return this->find(BoundType::DISABLE, LiteralData(),
+                          BoundType::DISABLE, LiteralData());
+    }
+    std::set<rowid_t> find(const LiteralData & val) {
+        return this->find(BoundType::INCLUDE, val,
+                          BoundType::INCLUDE, val);
+    }
     virtual std::set<rowid_t> find(BoundType lower_bound_type,
                                    const LiteralData& lower_bound,
                                    BoundType upper_bound_type,

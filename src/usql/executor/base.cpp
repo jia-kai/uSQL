@@ -2,13 +2,29 @@
 * @Author: BlahGeek
 * @Date:   2014-12-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 
 #include <iostream>
 #include "./base.h"
 
 using namespace usql;
+
+bool BaseExecutor::check_constraint(std::shared_ptr<TableInfo> tableinfo, 
+                                    size_t number, const LiteralData & val) {
+    // check primary / unique
+    auto & cons = tableinfo->constraints[number];
+    auto & index = tableinfo->indexes[number];
+    if(cons.find(SQLStatement::ColumnConstraint::PRIMARY) != cons.end() || 
+       cons.find(SQLStatement::ColumnConstraint::UNIQUE) != cons.end()) {
+        usql_assert(index, "Index must exists for Primary or Unique column");
+        auto rows = index->find(IndexBase::BoundType::INCLUDE, val,
+                                IndexBase::BoundType::INCLUDE, val);
+        if(!rows.empty())
+            return false;
+    }
+    return true;
+}
 
 void BaseExecutor::setTargetColumns(std::vector<ColumnAndTableName> target_columns) {
     this->target_columns = target_columns;
@@ -41,7 +57,8 @@ void BaseExecutor::setFullColumns() {
 }
 
 void BaseExecutor::find(const std::unique_ptr<WhereStatement> & where,
-                        BaseExecutor::callback_t callback) {
+                        BaseExecutor::callback_t callback,
+                        bool callback_all) {
     std::vector<std::set<rowid_t>> rows(tableinfos.size());
     for(auto & row: rows)
         row.insert(WhereStatement::INCLUDE_ALL);
@@ -55,14 +72,15 @@ void BaseExecutor::find(const std::unique_ptr<WhereStatement> & where,
     }
     callback_values.resize(target_columns.size());
     verify_values.resize(tableinfos.size());
-    this->recursive_find(0, rows, where, callback);
+    this->recursive_find(0, rows, where, callback, callback_all);
 }
 
 
 void BaseExecutor::recursive_find(size_t depth, 
                                   std::vector<std::set<rowid_t>> & rows,
                                   const std::unique_ptr<WhereStatement> & where,
-                                  BaseExecutor::callback_t callback) {
+                                  BaseExecutor::callback_t callback,
+                                  bool callback_all) {
     auto table_name = tableinfos[depth]->name;
     auto & table = tableinfos[depth]->table;
 
@@ -71,15 +89,16 @@ void BaseExecutor::recursive_find(size_t depth,
         verify_values[depth].clear();
         for(size_t i = 0 ; i < data.size() ; i += 1) {
             verify_values[depth].push_back(data[i]);
-            if(dests_index[i] != -1)
+            if(!callback_all && dests_index[i] != -1)
                 callback_values[dests_index[i]] = data[i];
         }
         if(depth + 1 == tableinfos.size()) {
-            if(where->verify(verify_values))
-                return callback(rowid, callback_values); // rowid means the rowid of the last table
-            else return false;
+            if(where->verify(verify_values)) {
+                if(callback_all) return callback(rowid, verify_values.back()); // last table only
+                else return callback(rowid, callback_values); // rowid means the rowid of the last table
+            } else return false;
         } else {
-            recursive_find(depth+1, rows, where, callback);
+            recursive_find(depth+1, rows, where, callback, callback_all);
             return false;
         }
     };

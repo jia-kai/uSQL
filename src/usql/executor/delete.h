@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 
 #ifndef __usql_delete_executor_h__
@@ -40,7 +40,7 @@ public:
                 index->erase(vals[i], rowid);
             }
             return true;
-        });
+        }, true); // callback all last table
 
         usql_log("%lu rows deleted", ret.size());
         return ret;
