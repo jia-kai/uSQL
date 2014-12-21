@@ -23,6 +23,7 @@ namespace usql {
 class SQLRunner {
 public:
     using callback_t = std::function<void(const std::vector<LiteralData> & vals)>;
+    static callback_t default_callback;
 
 private:
     PageIO & page_io;
@@ -43,7 +44,7 @@ protected:
 public:
     SQLRunner(PageIO & page_io);
     void run(const std::unique_ptr<SQLStatement> & stmt,
-             callback_t callback);
+             callback_t callback = default_callback);
 };
 
 }

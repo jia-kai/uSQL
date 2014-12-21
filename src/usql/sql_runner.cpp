@@ -11,12 +11,20 @@
 
 using namespace usql;
 
+SQLRunner::callback_t SQLRunner::default_callback = [](const std::vector<LiteralData> vals) {
+    for(size_t i = 0 ; i < vals.size() ; i += 1) {
+        if(i != 0) std::cout << "|";
+        vals[i].print(std::cout);
+    }
+    std::cout << std::endl;
+};
+
 SQLRunner::SQLRunner(PageIO & page_io): page_io(page_io) {
     root_table = TableInfo::getRootTableInfo(page_io);
 }
 
 void SQLRunner::_update(std::string name, std::string col, LiteralData val) {
-    usql_log("Update root table: %s %s", name.c_str(), col.c_str());
+    usql_log("Updating root table: %s %s", name.c_str(), col.c_str());
     std::unique_ptr<UpdateExecutor> updator (new UpdateExecutor(
                                                 {root_table},
                                                 {ColumnAndTableName(root_table->name, col)}));
@@ -29,6 +37,7 @@ void SQLRunner::_update(std::string name, std::string col, LiteralData val) {
 
     auto ret = updator->execute({val}, where_stmt);
     usql_assert(ret.size() == 1, "Update root table failed");
+    usql_log("Update root table done");
 }
 
 void SQLRunner::findTableIndexes(std::shared_ptr<TableInfo> & tableinfo) {
@@ -50,9 +59,10 @@ void SQLRunner::findTableIndexes(std::shared_ptr<TableInfo> & tableinfo) {
         auto n = vals[5].int_v;
         usql_log("Found index for table %s: %s (%lld)", 
                  vals[2].string_v.c_str(), vals[1].string_v.c_str(), n);
+        auto name = vals[1].string_v;
         tableinfo->indexes[n] = tableinfo->table->columns[n].second->load_index(
-                page_io, vals[3].int_v, [&, this](const PageIO::Page & root) {
-                    this->_update(vals[1].string_v, "page_root", LiteralData(root.id()));
+                page_io, vals[3].int_v, [name, this](const PageIO::Page & root) {
+                    this->_update(name, "page_root", LiteralData(root.id()));
                 });
         return false;
     });
@@ -68,7 +78,10 @@ std::shared_ptr<TableInfo> SQLRunner::getTableInfo(std::string tbname) {
     // name = tbname and type = TABLE
     auto where_stmt = std::make_unique<WhereStatement>();
     where_stmt->type = WhereStatement::WhereStatementType::AND;
-    where_stmt->children.resize(2);
+    
+    where_stmt->children.clear();
+    where_stmt->children.push_back(std::make_unique<WhereStatement>());
+    where_stmt->children.push_back(std::make_unique<WhereStatement>());
 
     where_stmt->children[0]->a_is_literal = false;
     where_stmt->children[0]->na = ColumnAndTableName(root_table->name, "name");
@@ -88,10 +101,10 @@ std::shared_ptr<TableInfo> SQLRunner::getTableInfo(std::string tbname) {
         usql_assert(err == 0, "parse schema error");
         schema_stmt.normalize();
         ret->table = std::make_shared<Table>(page_io, schema_stmt.column_defs,
-                                             vals[4].int_v, [&, this](rowid_t newid) {
+                                             vals[4].int_v, [tbname, this](rowid_t newid) {
                                                 this->_update(tbname, "rows", LiteralData(newid));
                                              });
-        ret->table->load(vals[3].int_v, [&, this](const PageIO::Page & p) {
+        ret->table->load(vals[3].int_v, [tbname, this](const PageIO::Page & p) {
             this->_update(tbname, "page_root", LiteralData(p.id()));
         });
         ret->setConstraints(schema_stmt.column_constraints);
@@ -175,12 +188,14 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
             tableinfos.push_back(this->getTableInfo(name));
 
     if(stmt->type == SQLStatement::Type::INSERT) {
+        usql_log("Type is INSERT, calling InsertExecutor");
         auto exe = std::make_unique<InsertExecutor>(tableinfos, stmt->column_names);
         for(auto & vals: stmt->values)
             exe->insert(vals);
         return;
     }
     if(stmt->type == SQLStatement::Type::SELECT) {
+        usql_log("Type is SELECT, calling SelectExecutor");
         auto exe = std::make_unique<SelectExecutor>(tableinfos, stmt->column_names);
         exe->find(stmt->where_stmt, 
                   [&](rowid_t rowid, const std::vector<LiteralData> & vals) -> bool {
@@ -190,16 +205,19 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
         return;
     }
     if(stmt->type == SQLStatement::Type::DELETE) {
+        usql_log("Type is DELETE, calling DeleteExecutor");
         auto exe = std::make_unique<DeleteExecutor>(tableinfos);
         exe->execute(stmt->where_stmt);
         return;
     }
     if(stmt->type == SQLStatement::Type::UPDATE) {
+        usql_log("Type is UPDATE, calling UpdateExecutor");
         auto exe = std::make_unique<UpdateExecutor>(tableinfos, stmt->column_names);
         exe->execute(stmt->values.back(), stmt->where_stmt);
         return;
     }
     if(stmt->type == SQLStatement::Type::CREATE_TB) {
+        usql_log("Type is CREATE TABLE");
         std::ostrstream sql;
         stmt->print(sql);
         this->createTable(stmt->table_names.back(), 
@@ -208,6 +226,7 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
         return;
     }
     if(stmt->type == SQLStatement::Type::CREATE_IDX) {
+        usql_log("Type is CREATE INDEX");
         for(auto & name: stmt->column_names)
             this->createIndex(tableinfos[0]->table, name, -1);
         return;

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-20
+* @Last Modified time: 2014-12-21
 */
 
 #include "./sql_statement.h"
@@ -51,7 +51,7 @@ ostream & SQLStatement::print(ostream & stream) {
                 stream << column.first << " " << column.second->type_name();
                 for(auto & cons: column_constraints[column.first]) {
                     if(cons == SQLStatement::ColumnConstraint::PRIMARY)
-                        stream << " PRIMARY";
+                        stream << " PRIMARY KEY";
                     else if(cons == SQLStatement::ColumnConstraint::NOT_NULL)
                         stream << " NOT NULL";
                     else if(cons == SQLStatement::ColumnConstraint::UNIQUE)
