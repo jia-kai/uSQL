@@ -7,7 +7,7 @@
 #pragma once
 
 #include <cstring>
-#include "./common.h"
+#include "../common.h"
 
 namespace usql {
 

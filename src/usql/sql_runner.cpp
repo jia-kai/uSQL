@@ -123,11 +123,15 @@ void SQLRunner::createTable(std::string tbname, const std::vector<column_def_t> 
         ColumnAndTableName(root_table->name, "name"),
         ColumnAndTableName(root_table->name, "desc"),
     }));
-    exe->insert({
-        LiteralData(int(TableInfo::RootRowType::TABLE)),
-        LiteralData(tbname),
-        LiteralData(sql)
-    });
+    try {
+        exe->insert({
+            LiteralData(int(TableInfo::RootRowType::TABLE)),
+            LiteralData(tbname),
+            LiteralData(sql)
+        });
+    } catch (NotUniqueException & e) {
+        throw SQLException("Table already exists");
+    }
 
     auto tableinfo = this->getTableInfo(tbname);
     usql_assert(tableinfo->name == tbname, "Create table failed");
@@ -171,13 +175,17 @@ void SQLRunner::createIndex(const std::shared_ptr<Table> & table, ColumnAndTable
         ColumnAndTableName(root_table->name, "page_root"),
         ColumnAndTableName(root_table->name, "col_index")
     }));
-    exe->insert({
-        LiteralData(int(TableInfo::RootRowType::INDEX)),
-        LiteralData(name.first + "." + name.second),
-        LiteralData(name.first),
-        LiteralData(root_page),
-        LiteralData(col_index)
-    });
+    try {
+        exe->insert({
+            LiteralData(int(TableInfo::RootRowType::INDEX)),
+            LiteralData(name.first + "." + name.second),
+            LiteralData(name.first),
+            LiteralData(root_page),
+            LiteralData(col_index)
+        });
+    } catch(NotUniqueException & e) {
+        throw SQLException("Index already exists");
+    }
 }
 
 void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,

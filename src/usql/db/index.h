@@ -1,9 +1,9 @@
 #ifndef __usql_index_h__
 #define __usql_index_h__ value
 
-#include "./ds/btree.h"
+#include "../ds/btree.h"
 #include "./table.h"
-#include "./datatype/base.h"
+#include "../datatype/base.h"
 #include <limits>
 
 using namespace usql;

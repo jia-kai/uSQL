@@ -12,9 +12,9 @@
 #include "./executor/insert.h"
 #include "./executor/select.h"
 #include "./executor/update.h"
-#include "./sql_statement.h"
-#include "./dbmeta.h"
-#include "./table_info.h"
+#include "./parser/sql_statement.h"
+#include "./file/dbmeta.h"
+#include "./db/table_info.h"
 
 using namespace usql;
 

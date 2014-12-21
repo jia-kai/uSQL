@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "usql/page_io.h"
+#include "usql/file/page_io.h"
 
 using namespace usql;
 

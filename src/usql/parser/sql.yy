@@ -6,7 +6,7 @@
 %define parser_class_name {SQLParser}
 
 %code requires{
-    #include "../sql_statement.h"
+    #include "./sql_statement.h"
     #include "../common.h"
     #include "../datatype/base.h"
     namespace usql {
@@ -29,8 +29,8 @@
     #include "../datatype/base.h"
     #include "../datatype/int.h"
     #include "../datatype/string.h"
-    #include "../sql_statement.h"
-    #include "../where_statement.h"
+    #include "./sql_statement.h"
+    #include "./where_statement.h"
 
     /* this is silly, but I can't figure out a way around */
     static int yylex(usql::SQLParser::semantic_type *yylval,

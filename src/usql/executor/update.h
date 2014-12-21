@@ -2,16 +2,16 @@
 * @Author: BlahGeek
 * @Date:   2014-12-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-20
+* @Last Modified time: 2014-12-21
 */
 #ifndef __usql_executor_update_h__
 #define __usql_executor_update_h__ value
 
-#include "../sql_statement.h"
-#include "../table.h"
-#include "../index.h"
-#include "../where_statement.h"
-#include "../table_info.h"
+#include "../parser/sql_statement.h"
+#include "../db/table.h"
+#include "../datatype/base.h"
+#include "../parser/where_statement.h"
+#include "../db/table_info.h"
 
 #include "./base.h"
 

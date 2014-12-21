@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-20
+* @Last Modified time: 2014-12-21
 */
 
 #include <iostream>
@@ -50,7 +50,7 @@ TEST_F(InsertTest, basic_insert) {
 
 TEST_F(InsertTest, reject_unique) {
     std::string sql("INSERT INTO table0 VALUES (42, -4, \"hi\")");
-    ASSERT_THROW(do_insert(sql), InsertException);
+    ASSERT_ANY_THROW(do_insert(sql));
 }
 
 TEST_F(InsertTest, insert_multiple) {
@@ -65,7 +65,7 @@ TEST_F(InsertTest, insert_multiple) {
 
 TEST_F(InsertTest, reject_count) {
     std::string sql("INSERT INTO table0 VALUES (42)");
-    ASSERT_THROW(do_insert(sql), InsertException);
+    ASSERT_ANY_THROW(do_insert(sql));
 }
 
 TEST_F(InsertTest, insert_partial) {
@@ -78,5 +78,5 @@ TEST_F(InsertTest, insert_partial) {
 
 TEST_F(InsertTest, insert_partial_reject_unique) {
     std::string sql("INSERT INTO table0 (c0, c2) VALUES (42, \"hi\")");
-    ASSERT_THROW(do_insert(sql), InsertException);
+    ASSERT_ANY_THROW(do_insert(sql));
 }

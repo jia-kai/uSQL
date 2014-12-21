@@ -38,5 +38,5 @@ TEST_F(SQLRunnerTest, basic) {
     run("INSERT INTO table0 (c0, c1) values (1,2)");
     run("SELECT * FROM table0");
     run("CREATE INDEX ON table0 (c0)");
-    run("CREATE INDEX ON table0 (c0)");
+    ASSERT_ANY_THROW(run("CREATE INDEX ON table0 (c0)"));
 }

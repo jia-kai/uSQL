@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-20
+* @Last Modified time: 2014-12-21
 */
 
 #include <iostream>
@@ -41,9 +41,11 @@ void BaseExecutor::setTargetColumns(std::vector<ColumnAndTableName> target_colum
             if(it == target_columns.end()) target_columns_index.back().push_back(-1);
             else target_columns_index.back().push_back(it - target_columns.begin());
         }
+        #if 0
         usql_log("Target columns index for table %s:", tableinfo->name.c_str());
         for(size_t i = 0 ; i < target_columns_index.back().size() ; i += 1)
             usql_log("\t%lu -> %d", i, target_columns_index.back()[i]);
+        #endif
     }
 }
 

@@ -8,10 +8,10 @@
 #ifndef __usql_table_info_h__
 #define __usql_table_info_h__ value
 
-#include "./table.h"
-#include "./index.h"
-#include "./sql_statement.h"
-#include "./page_io.h"
+#include "../db/table.h"
+#include "../db/index.h"
+#include "../parser/sql_statement.h"
+#include "../file/page_io.h"
 
 using namespace usql;
 

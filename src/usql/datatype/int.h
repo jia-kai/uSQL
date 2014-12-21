@@ -10,7 +10,7 @@
 #include "../ds/btree.h"
 #include <iostream>
 
-#include "../index.h"
+#include "../db/index.h"
 
 namespace usql {
 

@@ -8,7 +8,7 @@
 #include "./page_io_env.h"
 #include "./utils.h"
 
-#include "usql/table.h"
+#include "usql/db/table.h"
 
 #include "usql/ds/btree.h"
 #include "usql/datatype/int.h"

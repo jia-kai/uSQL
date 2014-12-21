@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-21
 */
 
 
@@ -10,10 +10,10 @@
 #define __usql_test_table_and_index_env_h__ value
 
 #include "./page_io_env.h"
-#include "usql/table.h"
-#include "usql/index.h"
-#include "usql/sql_statement.h"
-#include "usql/table_info.h"
+#include "usql/db/table.h"
+#include "usql/db/index.h"
+#include "usql/parser/sql_statement.h"
+#include "usql/db/table_info.h"
 
 using namespace usql;
 

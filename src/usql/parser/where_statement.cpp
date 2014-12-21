@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <utility>
 #include "./where_statement.h"
-#include "./index.h"
-#include "./table.h"
-#include "./table_info.h"
+#include "../db/index.h"
+#include "../db/table.h"
+#include "../db/table_info.h"
 
 using namespace usql;
 

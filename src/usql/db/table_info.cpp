@@ -7,9 +7,9 @@
 
 #include <iostream>
 #include "./table_info.h"
-#include "./common.h"
-#include "./datatype/int.h"
-#include "./datatype/string.h"
+#include "../common.h"
+#include "../datatype/int.h"
+#include "../datatype/string.h"
 
 using namespace usql;
 

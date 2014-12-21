@@ -8,11 +8,11 @@
 #ifndef __usql_delete_executor_h__
 #define __usql_delete_executor_h__ value
 
-#include "../sql_statement.h"
-#include "../table.h"
-#include "../index.h"
-#include "../where_statement.h"
-#include "../table_info.h"
+#include "../parser/sql_statement.h"
+#include "../db/table.h"
+#include "../db/index.h"
+#include "../parser/where_statement.h"
+#include "../db/table_info.h"
 
 #include "./base.h"
 

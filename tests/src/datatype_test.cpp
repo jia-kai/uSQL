@@ -2,12 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2014-11-30
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-05
+* @Last Modified time: 2014-12-21
 */
 
 #include <string>
-#include "./usql/datatype/int.h"
-#include "./usql/datatype/string.h"
+#include "usql/datatype/int.h"
+#include "usql/datatype/string.h"
 
 #include <gtest/gtest.h>
 

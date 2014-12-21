@@ -1,8 +1,8 @@
 #ifndef __usql_where_statement_h__
 #define __usql_where_statement_h__ value
 
-#include "./common.h"
-#include "./datatype/base.h"
+#include "../common.h"
+#include "../datatype/base.h"
 #include <map>
 #include <utility>
 #include <iostream>

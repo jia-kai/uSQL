@@ -3,7 +3,7 @@
 #include <string>
 #include "sql_scanner.h"
 #include "../datatype/base.h"
-#include "../sql_statement.h"
+#include "./sql_statement.h"
 
 using std::cout;
 using std::endl;

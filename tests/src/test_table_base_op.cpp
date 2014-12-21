@@ -2,13 +2,13 @@
 * @Author: BlahGeek
 * @Date:   2014-12-04
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-21
 */
 
 #include "./page_io_env.h"
 #include "./utils.h"
 
-#include "usql/table.h"
+#include "usql/db/table.h"
 
 #include "usql/ds/btree.h"
 #include "usql/datatype/int.h"

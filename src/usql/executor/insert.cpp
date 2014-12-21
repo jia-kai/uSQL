@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-20
+* @Last Modified time: 2014-12-21
 */
 
 #include "./insert.h"
@@ -20,12 +20,12 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
         // check not null
         auto & cons = tableinfo->constraints[i];
         if(cons.find(SQLStatement::ColumnConstraint::NOT_NULL) != cons.end())
-            throw InsertException("NOT NULL column not provided");
+            throw SQLException("NOT NULL column not provided");
     }
 
     if(target_columns.size() != vals.size()) {
         usql_log("Size: %lu, %lu", target_columns.size(), vals.size());
-        throw InsertException("Invalid size of values or column names");
+        throw SQLException("Invalid size of values or column names");
     }
 
     std::vector<LiteralData> full_vals;
@@ -36,7 +36,7 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
             full_vals.push_back(vals[target_index[i]]);
 
         if(!this->check_constraint(tableinfo, i, full_vals.back()))
-            throw InsertException("Column not unique");
+            throw NotUniqueException("Column not unique");
     }
 
     auto ret = tableinfo->table->insert(full_vals);

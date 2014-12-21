@@ -6,13 +6,13 @@
 */
 
 #include "./sql_statement.h"
-#include "./datatype/base.h"
+#include "../datatype/base.h"
 #include <strstream>
 #include <iostream>
-#include "./common.h"
+#include "../common.h"
 
-#include "./parser/sql.tab.hpp"
-#include "./parser/sql_scanner.h"
+#include "./sql.tab.hpp"
+#include "./sql_scanner.h"
 
 using namespace usql;
 using namespace std;

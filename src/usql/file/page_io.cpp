@@ -5,7 +5,7 @@
  */
 
 #include "page_io.h"
-#include "ds/linked_stack.h"
+#include "../ds/linked_stack.h"
 
 using namespace usql;
 

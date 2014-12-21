@@ -1,10 +1,10 @@
 #ifndef __usql_table_h__
 #define __usql_table_h__ value
 
-#include "./parser/sql.tab.hpp"
-#include "./parser/sql_scanner.h"
-#include "./sql_statement.h"
-#include "./ds/btree.h"
+#include "../parser/sql.tab.hpp"
+#include "../parser/sql_scanner.h"
+#include "../parser/sql_statement.h"
+#include "../ds/btree.h"
 
 using namespace usql;
 
