@@ -20,6 +20,8 @@ namespace usql {
 class TableInfo {
 public:
     std::string name;
+
+    std::string desc;
     
     std::shared_ptr<Table> table;
     // size = column count, nullptr if not present

@@ -44,6 +44,7 @@ using token = usql::SQLParser::token;
 
 (?i:"CREATE")       { return token::CREATE; }
 (?i:"TABLE")        { return token::TABLE; }
+(?i:"TABLES")       { return token::TABLES; }
 
 (?i:"SELECT")       { return token::SELECT; }
 (?i:"FROM")         { return token::FROM; }
@@ -54,6 +55,7 @@ using token = usql::SQLParser::token;
 (?i:"DELETE")       { return token::DELETE; }
 (?i:"UPDATE")       { return token::UPDATE; }
 (?i:"SET")          { return token::SET; }
+(?i:"SHOW")         { return token::SHOW; }
 (?i:"INDEX")        { return token::INDEX; }
 (?i:"ON")           { return token::ON; }
 

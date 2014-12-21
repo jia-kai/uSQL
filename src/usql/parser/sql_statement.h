@@ -30,7 +30,7 @@ public:
 
     enum class Type {
         CREATE_DB, DROP_DB, USE_DB, 
-        SHOW_TBS, CREATE_TB, DROP_TB, DESC_TB,
+        SHOW_TBS, CREATE_TB, DROP_TB, 
         INSERT, DELETE, UPDATE,
         CREATE_IDX, DROP_IDX,
         SELECT,

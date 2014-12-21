@@ -29,11 +29,12 @@ private:
     PageIO & page_io;
     std::shared_ptr<TableInfo> root_table;
 
+protected:
     void _update(std::string name, std::string col, LiteralData val);
     void findTableIndexes(std::shared_ptr<TableInfo> & tableinfo);
     std::shared_ptr<TableInfo> getTableInfo(std::string tbname);
+    std::vector<std::string> getTableNames();
 
-protected:
     void createTable(std::string tbname, 
                      const std::vector<column_def_t> & cols,
                      std::string sql);

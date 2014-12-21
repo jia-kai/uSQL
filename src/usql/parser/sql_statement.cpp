@@ -64,9 +64,6 @@ ostream & SQLStatement::print(ostream & stream) {
         case SQLStatement::Type::DROP_TB:
             stream << "DROP TABLE " << table_names[0] ;
             break;
-        case SQLStatement::Type::DESC_TB:
-            stream << "DESCRIBE TABLE " << table_names[0];
-            break;
         case SQLStatement::Type::SELECT:
             stream << "SELECT ";
             for(size_t i = 0 ; i < column_names.size() ; i += 1) {

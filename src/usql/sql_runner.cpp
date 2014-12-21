@@ -68,6 +68,25 @@ void SQLRunner::findTableIndexes(std::shared_ptr<TableInfo> & tableinfo) {
     });
 }
 
+std::vector<std::string> SQLRunner::getTableNames() {
+    std::vector<std::string> ret;
+    std::unique_ptr<SelectExecutor> selector (new SelectExecutor(
+                                              {root_table},
+                                              {ColumnAndTableName(root_table->name, "name")}));
+
+    auto where_stmt = std::make_unique<WhereStatement>();
+    where_stmt->a_is_literal = false;
+    where_stmt->na = ColumnAndTableName(root_table->name, "type");
+    where_stmt->b = LiteralData(int(TableInfo::RootRowType::TABLE));
+    where_stmt->normalize();
+
+    selector->find(where_stmt, [&](rowid_t rowid, const std::vector<LiteralData> & vals) -> bool {
+        ret.push_back(vals[0].string_v);
+        return false;
+    });
+    return ret;
+}
+
 std::shared_ptr<TableInfo> SQLRunner::getTableInfo(std::string tbname) {
     auto ret = std::make_shared<TableInfo>();
     ret->name = tbname;
@@ -108,6 +127,7 @@ std::shared_ptr<TableInfo> SQLRunner::getTableInfo(std::string tbname) {
             this->_update(tbname, "page_root", LiteralData(p.id()));
         });
         ret->setConstraints(schema_stmt.column_constraints);
+        ret->desc = vals[2].string_v;
         return false;
     });
 
@@ -225,7 +245,6 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
         return;
     }
     if(stmt->type == SQLStatement::Type::CREATE_TB) {
-        usql_log("Type is CREATE TABLE");
         std::ostrstream sql;
         stmt->print(sql);
         this->createTable(stmt->table_names.back(), 
@@ -234,10 +253,20 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
         return;
     }
     if(stmt->type == SQLStatement::Type::CREATE_IDX) {
-        usql_log("Type is CREATE INDEX");
         for(auto & name: stmt->column_names)
             this->createIndex(tableinfos[0]->table, name, -1);
         return;
     }
-    usql_assert(false, "Statement type %d not implemented yet", int(stmt->type));
+    if(stmt->type == SQLStatement::Type::SHOW_TBS) {
+        auto tables = this->getTableNames();
+        for(auto & name: tables) {
+            auto tableinfo = this->getTableInfo(name);
+            if(callback == nullptr) continue;
+            callback(std::vector<LiteralData>({
+                LiteralData(name), LiteralData(tableinfo->desc)
+            }));
+        }
+        return;
+    }
+    throw SQLException("Not implemented yet");
 }

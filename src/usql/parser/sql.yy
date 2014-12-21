@@ -77,6 +77,7 @@
 %token DELETE
 %token UPDATE SET
 %token INDEX ON
+%token TABLES
 
 %token AND OR NOT
 
@@ -117,6 +118,9 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     | CREATE INDEX ON IDENTIFIER '(' column_names ')' END {
                         driver.type = usql::SQLStatement::Type::CREATE_IDX;
                         driver.table_names.push_back(*($4));
+                    }
+                    | SHOW TABLES {
+                        driver.type = usql::SQLStatement::Type::SHOW_TBS;
                     }
                     ;
 
