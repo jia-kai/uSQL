@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-06
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-21
 */
 
 #include <iostream>
@@ -130,8 +130,8 @@ bool WhereStatement::verify(const std::vector<std::vector<LiteralData>> & data,
     #endif
     if(type == WhereStatement::WhereStatementType::PASS)
         return children[0]->verify(data, force_verify);
-    // if(!force_verify && !need_verify)
-    //     return true;
+    if(!force_verify && !need_verify)
+        return true;
     if(type == WhereStatement::WhereStatementType::LEAF) {
         if(!a_is_literal)
             a = data[na_table_i][na_col_i];
@@ -151,7 +151,7 @@ bool WhereStatement::verify(const std::vector<std::vector<LiteralData>> & data,
     }
     if(type == WhereStatement::WhereStatementType::OR) {
         for(auto & child: this->children)
-            if(child->verify(data))
+            if(child->verify(data, true))
                 return true;
         return false;
     }
