@@ -1,6 +1,6 @@
 /*
  * $File: file_io.cpp.linux
- * $Date: Fri Oct 24 00:43:13 2014 +0800
+ * $Date: Mon Dec 22 01:12:40 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -19,7 +19,9 @@ using namespace usql;
 
 FileIO::FileIO(const char *path, size_t default_page_size) {
     if (access(path, R_OK | W_OK)) {
-        usql_assert(default_page_size >= sizeof(DBMeta));
+        usql_assert(default_page_size >= sizeof(DBMeta),
+                "page size too small: got %zd; %zd minimum",
+                default_page_size, sizeof(DBMeta));
         usql_log("create new database: %s; page_size=%zd",
                 path, default_page_size);
         DBMeta meta;
@@ -31,20 +33,22 @@ FileIO::FileIO(const char *path, size_t default_page_size) {
         fclose(fout);
     }
 
-    m_fd = open(path, O_APPEND | O_CREAT | O_RDWR, 0644);
+    m_fd = open(path, O_RDWR, 0644);
     usql_assert(m_fd != -1, "failed to open %s: %s", path, strerror(errno));
     struct stat stat;
     fstat(m_fd, &stat);
     size_t fsize = stat.st_size;
     usql_assert(fsize >= sizeof(DBMeta));
     m_map_addr = mmap(NULL, fsize, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE, m_fd, 0);
+            MAP_SHARED, m_fd, 0);
     usql_assert(m_map_addr != MAP_FAILED, "failed to map: %s", strerror(errno));
     m_meta = *static_cast<DBMeta*>(m_map_addr);
     usql_log("open database %s: page_size=%zd nr_page=%zd fd=%d",
             path, m_meta.page_size, m_meta.nr_page, m_fd);
     usql_assert(m_meta.check_magic());
-    usql_assert(fsize == m_meta.nr_page * m_meta.page_size);
+    usql_assert(fsize == m_meta.nr_page * m_meta.page_size,
+            "expected file size: %zd  got: %zd; damaged file ?",
+            m_meta.nr_page * m_meta.page_size, fsize);
 }
 
 void FileIO::operator = (FileIO &&rhs) {

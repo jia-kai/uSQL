@@ -1,0 +1,4 @@
+stack.hh
+*.tab.cpp
+*.tab.hpp
+*.yy.cpp

@@ -36,7 +36,6 @@
     static int yylex(usql::SQLParser::semantic_type *yylval,
         usql::SQLScanner  &scanner,
         usql::SQLStatement   &driver);
-
 }
 
 /* token types */
@@ -249,13 +248,17 @@ column_def          : IDENTIFIER datatype {
                          driver.column_defs.emplace_back(*($1),
                              std::shared_ptr<usql::DataTypeBase>($2));
                          $2 = nullptr;
-                         if($$) delete($$);
-                         $$ = new std::string(*($1));
+                         if(!$$)
+                             $$ = new std::string(*($1));
+                         else
+                             $$->assign(*($1));
                       }
                     | column_def COLUMN_CONSTRAINT {
                          driver.column_constraints[*($1)].insert($2);
-                         if($$) delete($$);
-                         $$ = new std::string(*($1));
+                         if(!$$)
+                             $$ = new std::string(*($1));
+                         else
+                             $$->assign(*($1));
                     }
                     ;
 

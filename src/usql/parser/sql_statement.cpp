@@ -7,7 +7,7 @@
 
 #include "./sql_statement.h"
 #include "../datatype/base.h"
-#include <strstream>
+#include <sstream>
 #include <iostream>
 #include "../common.h"
 
@@ -129,9 +129,9 @@ ostream & SQLStatement::print(ostream & stream) {
 
 SQLStatement::SQLStatement(std::string sql) {
     origin = sql;
-    st = std::unique_ptr<istrstream>(new istrstream(origin.c_str()));
-    scanner = std::unique_ptr<SQLScanner>(new SQLScanner(st.get()));
-    parser = std::unique_ptr<SQLParser>(new SQLParser(*scanner, *this));
+    st = std::make_unique<istringstream>(origin.c_str());
+    scanner.reset(new SQLScanner{st.get()});
+    parser.reset(new SQLParser{*scanner, *this});
 }
 
 void SQLStatement::setDebug(bool enable) {
@@ -157,3 +157,12 @@ void SQLStatement::normalize() {
             val.first = table_names[0];
     where_stmt->setDefaultTable(table_names[0]);
 }
+
+void SQLStatement::SQLScannerDeleter::operator () (SQLScanner *ptr) {
+    delete ptr;
+}
+
+void SQLStatement::SQLParserDeleter::operator () (SQLParser *ptr) {
+    delete ptr;
+}
+

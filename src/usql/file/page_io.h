@@ -1,6 +1,6 @@
 /*
  * $File: page_io.h
- * $Date: Tue Nov 04 22:35:12 2014 +0800
+ * $Date: Sun Dec 21 23:46:51 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -14,7 +14,7 @@ template<typename T>
 class LinkedStack;
 
 /*!
- * page-based file management, with allocation and deallocation support
+ * \brief page-based file management, with allocation and deallocation support
  */
 class PageIO {
     public:

@@ -14,12 +14,27 @@ using namespace usql;
 
 namespace usql {
 
-class SQLException: public std::exception {
-private:
-    std::string reason;
-public:
-    SQLException(std::string s): reason(s) {}
-    virtual const char * what() const noexcept override {return reason.c_str(); }
+class USQLError: public std::exception {
+    std::string m_reason;
+
+    public:
+        USQLError(const std::string &reason):
+            m_reason{reason}
+        {}
+
+        const char * what() const noexcept override {
+            return m_reason.c_str();
+        }
+};
+
+class SQLException: public USQLError {
+    public:
+        using USQLError::USQLError;
+};
+
+class AssertionError: public USQLError {
+    public:
+        using USQLError::USQLError;
 };
 
 }

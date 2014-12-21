@@ -6,7 +6,7 @@
 #include "./where_statement.h"
 
 #include <vector>
-#include <strstream>
+#include <sstream>
 #include <map>
 #include <set>
 
@@ -22,10 +22,17 @@ using column_def_t = std::pair<std::string, std::shared_ptr<DataTypeBase>>;
 class SQLStatement {
 
 private:
-    std::unique_ptr<std::istrstream> st = nullptr;
-
-    std::unique_ptr<SQLParser> parser = nullptr;
-    std::unique_ptr<SQLScanner> scanner = nullptr;
+    class SQLScannerDeleter {
+        public:
+            void operator () (SQLScanner *ptr);
+    };
+    class SQLParserDeleter {
+        public:
+            void operator () (SQLParser *ptr);
+    };
+    std::unique_ptr<std::istringstream> st = nullptr;
+    std::unique_ptr<SQLParser, SQLParserDeleter> parser = nullptr;
+    std::unique_ptr<SQLScanner, SQLScannerDeleter> scanner = nullptr;
 public:
 
     enum class Type {

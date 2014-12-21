@@ -1,10 +1,11 @@
 /*
  * $File: common.cpp
- * $Date: Tue Oct 21 09:53:32 2014 +0800
+ * $Date: Mon Dec 22 01:33:25 2014 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
 #include "common.h"
+#include "exception.h"
 
 #include <cstdio>
 #include <cstring>
@@ -20,7 +21,7 @@ void usql::__usql_log__(const char *file, const char *func, int line,
 	static const char *time_fmt = nullptr;
 	if (!time_fmt) {
 		if (isatty(fileno(stderr)))
-			time_fmt = "\033[1;31m" TIME_FMT "\033[0m ";
+			time_fmt = "\033[33m" TIME_FMT "\033[0m ";
 		else
 			time_fmt = TIME_FMT " ";
 	}
@@ -60,10 +61,9 @@ void usql::__usql_assert_fail__(
         msg.append(svsprintf(msg_fmt, ap));
         va_end(ap);
     }
-    fprintf(stderr,
+    throw AssertionError{ssprintf(
             "assertion `%s' failed at %s:%d: %s%s\n",
-            expr, file, line, func, msg.c_str());
-    __builtin_trap();
+            expr, file, line, func, msg.c_str())};
 }
 
 std::string usql::svsprintf(const char *fmt, va_list ap_orig) {

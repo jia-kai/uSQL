@@ -1,11 +1,7 @@
 build
 data
+/usql
 *.swp
 *.pyc
-
-*.tab.cpp
-*.tab.hpp
-
 *.bak
-*.yy.cpp
 *.output

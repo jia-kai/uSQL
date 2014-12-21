@@ -37,14 +37,19 @@ rowid_t Table::insert(std::vector<LiteralData> values, rowid_t target) {
             maxrow_updator(maxrow);
     }
     auto it = this->lookup(target, true);
-    char * pdata = static_cast<char *>(it.payload());
+    try {
+        char * pdata = static_cast<char *>(it.payload());
 
-    for(size_t i = 0 ; i < columns.size() ; i += 1) {
-        columns[i].second->dump(pdata, values[i]);
-        pdata += columns[i].second->storage_size();
+        for(size_t i = 0 ; i < columns.size() ; i += 1) {
+            columns[i].second->dump(pdata, values[i]);
+            pdata += columns[i].second->storage_size();
+        }
+
+        return it.key();
+    } catch (...) {
+        this->erase(target);
+        throw;
     }
-
-    return it.key();
 }
 
 std::vector<LiteralData> Table::load_data(Table::Iterator & it) {

@@ -6,7 +6,7 @@
 */
 
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <algorithm>
 #include "./sql_runner.h"
 
@@ -57,7 +57,7 @@ void SQLRunner::findTableIndexes(std::shared_ptr<TableInfo> & tableinfo) {
     where_stmt->normalize();
 
     selector->find(where_stmt, [&, this](rowid_t rowid, const std::vector<LiteralData> & vals) -> bool {
-        auto n = vals[5].int_v;
+        long long int n = vals[5].int_v;
         usql_log("Found index for table %s: %s (%lld)", 
                  vals[2].string_v.c_str(), vals[1].string_v.c_str(), n);
         auto name = vals[1].string_v;
@@ -252,7 +252,7 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
         return;
     }
     if(stmt->type == SQLStatement::Type::CREATE_TB) {
-        std::ostrstream sql;
+        std::ostringstream sql;
         stmt->print(sql);
         this->createTable(stmt->table_names.back(), 
                           stmt->column_defs,

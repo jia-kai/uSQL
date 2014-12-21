@@ -7,8 +7,6 @@
 
 #include <iostream>
 #include "./usql/parser/sql_statement.h"
-#include "./usql/parser/sql.tab.hpp"
-#include "./usql/parser/sql_scanner.h"
 
 #include <string>
 #include <gtest/gtest.h>

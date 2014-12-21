@@ -13,6 +13,7 @@
 #include "usql/ds/btree.h"
 #include "usql/datatype/int.h"
 #include "usql/datatype/string.h"
+#include "usql/exception.h"
 
 using namespace usql;
 
@@ -76,10 +77,11 @@ TEST_F(TableBaseOPTest, basic) {
     std::vector<LiteralData> row1 {
         LiteralData(42), LiteralData(43), LiteralData(44)
     };
-    ASSERT_DEATH(table->insert(row1), ".*");
+    EXPECT_THROW(table->insert(row1), USQLError);
 
     int count = 0;
-    table->walkthrough([&](rowid_t rowid, const std::vector<LiteralData> & v)->bool {
+    table->walkthrough([&](rowid_t,
+                const std::vector<LiteralData> &)->bool {
         count += 1;
         return false;
     });
