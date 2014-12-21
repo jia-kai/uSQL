@@ -122,6 +122,18 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     | SHOW TABLES {
                         driver.type = usql::SQLStatement::Type::SHOW_TBS;
                     }
+                    | CREATE DATABASE IDENTIFIER {
+                        driver.type = usql::SQLStatement::Type::CREATE_DB;
+                        driver.database_name = *($3);
+                    }
+                    | DROP DATABASE IDENTIFIER {
+                        driver.type = usql::SQLStatement::Type::DROP_DB;
+                        driver.database_name = *($3);
+                    }
+                    | USE IDENTIFIER {
+                        driver.type = usql::SQLStatement::Type::USE_DB;
+                        driver.database_name = *($2);
+                    }
                     ;
 
 update_values       : column_and_table WHERE_OP literal_data {

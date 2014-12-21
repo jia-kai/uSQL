@@ -58,6 +58,9 @@ using token = usql::SQLParser::token;
 (?i:"SHOW")         { return token::SHOW; }
 (?i:"INDEX")        { return token::INDEX; }
 (?i:"ON")           { return token::ON; }
+(?i:"DROP")         { return token::DROP; }
+(?i:"USE")          { return token::USE; }
+(?i:"DATABASE")     { return token::DATABASE; }
 
 (?i:"AND")          { return token::AND; }
 (?i:"OR")           { return token::OR; }

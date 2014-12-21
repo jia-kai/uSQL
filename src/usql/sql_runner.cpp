@@ -131,6 +131,8 @@ std::shared_ptr<TableInfo> SQLRunner::getTableInfo(std::string tbname) {
         return false;
     });
 
+    if(ret->table == nullptr) return nullptr;
+
     this->findTableIndexes(ret);
     return ret;
 
@@ -212,8 +214,12 @@ void SQLRunner::run(const std::unique_ptr<SQLStatement> & stmt,
                     SQLRunner::callback_t callback) {
     std::vector<std::shared_ptr<TableInfo>> tableinfos;
     if(stmt->type != SQLStatement::Type::CREATE_TB)
-        for(auto & name: stmt->table_names)
-            tableinfos.push_back(this->getTableInfo(name));
+        for(auto & name: stmt->table_names) {
+            auto tableinfo = this->getTableInfo(name);
+            if(tableinfo == nullptr)
+                throw SQLException("Table not found");
+            tableinfos.push_back(tableinfo);
+        }
 
     if(stmt->type == SQLStatement::Type::INSERT) {
         usql_log("Type is INSERT, calling InsertExecutor");
