@@ -41,10 +41,10 @@ FileIO::FileIO(const char *path, size_t default_page_size) {
             MAP_PRIVATE, m_fd, 0);
     usql_assert(m_map_addr != MAP_FAILED, "failed to map: %s", strerror(errno));
     m_meta = *static_cast<DBMeta*>(m_map_addr);
-    usql_assert(m_meta.check_magic());
-    usql_assert(fsize == m_meta.nr_page * m_meta.page_size);
     usql_log("open database %s: page_size=%zd nr_page=%zd fd=%d",
             path, m_meta.page_size, m_meta.nr_page, m_fd);
+    usql_assert(m_meta.check_magic());
+    usql_assert(fsize == m_meta.nr_page * m_meta.page_size);
 }
 
 void FileIO::operator = (FileIO &&rhs) {
@@ -56,14 +56,16 @@ void FileIO::operator = (FileIO &&rhs) {
 FileIO::~FileIO() {
     if (!m_map_addr)
         return;
+    sync_meta();
     {
         double k = m_meta.page_size / 1024.0 / 1024.0;
-        usql_log("close database: fd=%d size=%.3f/%.3fMiB", m_fd,
+        usql_log("close database: fd=%d nr_page=%lu size=%.3f/%.3fMiB", m_fd,
+                    m_meta.nr_page,
                     m_meta.nr_page_allocated * k,
                     m_meta.nr_page * k);
     }
-    sync_meta();
     size_t length = m_meta.nr_page * m_meta.page_size;
+
     auto v = msync(m_map_addr, length, MS_SYNC);
     usql_assert(!v, "failed to msync: %s", strerror(errno));
     v = munmap(m_map_addr, length);

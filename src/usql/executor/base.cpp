@@ -6,6 +6,7 @@
 */
 
 #include <iostream>
+#include <algorithm>
 #include "./base.h"
 
 using namespace usql;

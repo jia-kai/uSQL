@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <strstream>
+#include <algorithm>
 #include "./sql_runner.h"
 
 using namespace usql;

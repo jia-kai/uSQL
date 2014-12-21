@@ -39,7 +39,7 @@ $(BUILD_DIR)/%.o: %.$(SRC_EXT)
 	@$(CXX) $(CPPFLAGS) -MM -MT "$@" "$<"  > "$(@:.o=.d)"
 	$(V)$(CXX) -c $< -o $@ $(CXXFLAGS)
 
-# src/usql/parser/sql.tab.hpp: src/usql/parser/sql.yy
+src/usql/parser/sql.tab.hpp: src/usql/parser/sql.yy
 parser: src/usql/parser/sql.tab.$(SRC_EXT) src/usql/parser/sql.yy.$(SRC_EXT)
 
 src/usql/parser/sql.tab.$(SRC_EXT): src/usql/parser/sql.yy
@@ -56,7 +56,9 @@ $(TARGET): $(OBJS)
 	$(V)$(CXX) $^ -o $@ -lpthread $(LDFLAGS)
 
 clean:
-	rm -rf $(BUILD_DIR)/src $(TARGET)
+	rm -rf $(BUILD_DIR)/src $(TARGET) 
+	rm -rf src/usql/parser/sql.tab.$(SRC_EXT)
+	rm -rf src/usql/parser/sql.yy.$(SRC_EXT)
 
 clean-full:
 	rm -rf $(BUILD_DIR) $(TARGET)
