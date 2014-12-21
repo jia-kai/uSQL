@@ -52,11 +52,11 @@ private:
 
 public:
 
-    virtual std::unique_ptr<IndexBase> load_index(
+    virtual std::shared_ptr<IndexBase> load_index(
         PageIO &page_io, PageIO::page_id_t root, 
         PagedDataStructureBase::root_updator_t root_updator) override {
 
-        return std::make_unique<Index<int64_t>>(
+        return std::make_shared<Index<int64_t>>(
             [](const LiteralData & data)->int64_t{return data.int_v;},
             page_io, root, root_updator);
     }

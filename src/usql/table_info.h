@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-18
+* @Last Modified time: 2014-12-21
 */
 
 #ifndef __usql_table_info_h__
@@ -11,6 +11,7 @@
 #include "./table.h"
 #include "./index.h"
 #include "./sql_statement.h"
+#include "./page_io.h"
 
 using namespace usql;
 
@@ -30,6 +31,13 @@ public:
         for(auto & col: table->columns)
             constraints.push_back(x[col.first]);
     }
+
+public:
+    enum class RootRowType {
+        TABLE, INDEX 
+    };
+
+    static std::shared_ptr<TableInfo> getRootTableInfo(PageIO & page_io);
 };
 
 }

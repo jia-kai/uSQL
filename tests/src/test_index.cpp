@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-05
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-05
+* @Last Modified time: 2014-12-21
 */
 
 #include "./page_io_env.h"
@@ -25,7 +25,7 @@ protected:
     std::unique_ptr<DataTypeBase> datatype = nullptr;
     PageIO::page_id_t index_root = 0;
 
-    std::unique_ptr<IndexBase> index = nullptr;
+    std::shared_ptr<IndexBase> index = nullptr;
 
     void SetUp() override {
         PageIOTestEnv::SetUp();

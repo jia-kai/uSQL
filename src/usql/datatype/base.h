@@ -88,7 +88,7 @@ public:
     LiteralData load(const void * src) const;
     void dump(void * dest, const LiteralData & data) const;
 
-    virtual std::unique_ptr<IndexBase> load_index(
+    virtual std::shared_ptr<IndexBase> load_index(
         PageIO &page_io, PageIO::page_id_t root, 
         PagedDataStructureBase::root_updator_t root_updator) = 0;
 

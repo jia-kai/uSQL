@@ -76,6 +76,7 @@
 %token INSERT INTO VALUES
 %token DELETE
 %token UPDATE SET
+%token INDEX ON
 
 %token AND OR NOT
 
@@ -112,6 +113,10 @@ sql_statement       : CREATE TABLE IDENTIFIER '(' column_defs ')' END {
                     | UPDATE IDENTIFIER SET update_values where_or_empty END {
                         driver.type = usql::SQLStatement::Type::UPDATE;
                         driver.table_names.push_back(*($2));
+                    }
+                    | CREATE INDEX ON IDENTIFIER '(' column_names ')' END {
+                        driver.type = usql::SQLStatement::Type::CREATE_IDX;
+                        driver.table_names.push_back(*($4));
                     }
                     ;
 

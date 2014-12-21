@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2014-12-03
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-19
+* @Last Modified time: 2014-12-20
 */
 
 #include "./sql_statement.h"
@@ -28,6 +28,14 @@ ostream & SQLStatement::print(ostream & stream) {
             break;
         case SQLStatement::Type::USE_DB:
             stream << "USE " << database_name;
+            break;
+        case SQLStatement::Type::CREATE_IDX:
+            stream << "CREATE INDEX ON " << table_names[0] << " (";
+            for(size_t i = 0 ; i < column_names.size() ; i += 1) {
+                if(i != 0) stream << ", ";
+                stream << column_names[i].second;
+            }
+            stream << ")";
             break;
         case SQLStatement::Type::SHOW_TBS:
             stream << "SHOW TABLES" ;

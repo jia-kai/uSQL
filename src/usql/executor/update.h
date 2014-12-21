@@ -25,7 +25,7 @@ public:
 
     using BaseExecutor::BaseExecutor;
     std::set<rowid_t> execute(std::vector<LiteralData> vals,
-                              std::unique_ptr<WhereStatement> where_stmt) {
+                              const std::unique_ptr<WhereStatement> & where_stmt) {
         usql_assert(tableinfos.size() == 1, "only one table is needed by update executor");
         auto & tableinfo = tableinfos.back();
         auto & target_index = target_columns_index.back();
@@ -43,7 +43,7 @@ public:
                         throw "Not unique";
                 }
             }
-            
+
             #if 0
             usql_log("Update values:");
             for(auto & val: update_val) {

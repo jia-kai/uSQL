@@ -54,6 +54,8 @@ using token = usql::SQLParser::token;
 (?i:"DELETE")       { return token::DELETE; }
 (?i:"UPDATE")       { return token::UPDATE; }
 (?i:"SET")          { return token::SET; }
+(?i:"INDEX")        { return token::INDEX; }
+(?i:"ON")           { return token::ON; }
 
 (?i:"AND")          { return token::AND; }
 (?i:"OR")           { return token::OR; }

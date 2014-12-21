@@ -24,9 +24,10 @@ struct DBMeta {
 
     size_t page_freelist_root;
 
+    // for root table
     size_t root_table_page;
-
     rowid_t root_table_rows;
+    size_t root_index_page;
 
     bool check_magic();
 
