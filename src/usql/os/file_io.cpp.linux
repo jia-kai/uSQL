@@ -100,7 +100,7 @@ void FileIO::extend_size(size_t tgt_nr_page) {
     #else
     // it's *SLOW*, better way to replace mremap in non-GNU system?
     auto new_map_addr = mmap(NULL, new_len, PROT_READ | PROT_WRITE,
-            MAP_PRIVATE, m_fd, 0);
+            MAP_SHARED, m_fd, 0);
     usql_assert(m_map_addr != MAP_FAILED, "failed to map while remapping: %s", strerror(errno));
 
     memmove(new_map_addr, m_map_addr, old_len);
