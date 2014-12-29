@@ -88,6 +88,13 @@ using token = usql::SQLParser::token;
                         *(yylval->stringdata) = tmp.substr(1, tmp.length() - 2);
                         return token::LITERAL_STRING;
                     }
+\'(\\.|[^'])*\'     {   
+                        std::string tmp(yytext);
+                        yylval->stringdata = new std::string();
+                        // FIXME
+                        *(yylval->stringdata) = tmp.substr(1, tmp.length() - 2);
+                        return token::LITERAL_STRING;
+                    }
 
 .                   { return int(yytext[0]); }
 

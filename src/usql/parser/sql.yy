@@ -268,6 +268,7 @@ seperate_constraint : COLUMN_CONSTRAINT '(' IDENTIFIER ')' {
                     ;
 
 datatype            : INT {$$ = new usql::IntDataType(); }
+                    | INT '(' INTEGER ')' {$$ = new usql::IntDataType(); /* ignore INT size */}
                     | VARCHAR '(' INTEGER ')' {$$ = new usql::StringDataType($3);}
                     ;
 
