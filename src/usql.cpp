@@ -14,6 +14,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -32,6 +33,12 @@ static void strip_whitespace(std::string & str) {
 static void strip_back(std::string & str, const char c) {
     while(!str.empty() && str.back() == c)
         str.pop_back();
+}
+
+static long long get_time() {
+    struct timeval tp;
+    gettimeofday(&tp, nullptr);
+    return tp.tv_sec * 1000 + tp.tv_usec / 1000;
 }
 
 static std::string read_sql() {
@@ -59,13 +66,15 @@ int main(int argc, char * const argv[]) {
     g_usql_log_enable = false;
     std::string db_dir = "usql.db";
     bool debug_parse = false;
+    bool show_timer = false;
 
     char c;
-    while((c = getopt(argc, argv, "vghd:")) != -1) {
+    while((c = getopt(argc, argv, "vgthd:")) != -1) {
         switch(c) {
             case 'v': g_usql_log_enable = true; break;
             case 'd': db_dir = optarg; break;
             case 'g': debug_parse = true; break;
+            case 't': show_timer = true; break;
             case 'h': std::cerr << help_msg << std::endl; exit(1);
             default: std::cerr << "Unknown option." << std::endl << help_msg << std::endl; exit(1);
         }
@@ -87,6 +96,8 @@ int main(int argc, char * const argv[]) {
         add_history(sql.c_str());
         strip_back(sql, ';');
 
+        auto t0 = get_time();
+
         auto stmt = std::make_unique<SQLStatement>(sql);
         stmt->setDebug(debug_parse);
         if(stmt->parse() != 0) {
@@ -94,11 +105,21 @@ int main(int argc, char * const argv[]) {
             continue;
         }
         stmt->normalize();
+
+        auto t1 = get_time();
+
         try {
             runner->run(stmt);
         } catch (SQLException & e) {
             std::cerr << "Error: " << e.what() << std::endl;
             continue;
+        }
+
+        auto t2 = get_time();
+
+        if(show_timer) {
+            std::cerr << std::endl << "Time: parse " 
+                << t1 - t0 << "ms, execution " << t2 - t1 << "ms" << std::endl;
         }
     }
 
