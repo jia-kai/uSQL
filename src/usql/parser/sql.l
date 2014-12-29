@@ -66,12 +66,15 @@ using token = usql::SQLParser::token;
 (?i:"OR")           { return token::OR; }
 (?i:"NOT")          { return token::NOT; }
 
+(?i:"NULL")         { return token::NULL_; }
+
 ">="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GE; return token::WHERE_OP; }
 "<="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LE; return token::WHERE_OP; }
 "!="                { yylval->where_op = usql::WhereStatement::WhereStatementOperator::NE; return token::WHERE_OP; }
 ">"                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::GT; return token::WHERE_OP; }
 "<"                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::LT; return token::WHERE_OP; }
 "="                 { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
+(?i:"is")           { yylval->where_op = usql::WhereStatement::WhereStatementOperator::EQ; return token::WHERE_OP; }
 
 -?[0-9]+            {
                         yylval->intdata = atoi(yytext);

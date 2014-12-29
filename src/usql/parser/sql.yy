@@ -87,6 +87,7 @@
 %left WHERE_OP
 
 %token INT VARCHAR
+%token NULL_
 
 %left ','
 
@@ -274,6 +275,7 @@ datatype            : INT {$$ = new usql::IntDataType(); }
 
 literal_data        : LITERAL_STRING { $$ = new usql::LiteralData(*($1)); }
                     | INTEGER        { $$ = new usql::LiteralData($1); }
+                    | NULL_          { $$ = new usql::LiteralData(); }
                     ;
 
 literal_datas       : literal_data {

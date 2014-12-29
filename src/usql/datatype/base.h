@@ -19,7 +19,7 @@ enum class DataType {
 
 #define DEF_OP(op) \
     bool operator op (const LiteralData & another) const { \
-        if(datatype != another.datatype) return false; \
+        if(datatype != another.datatype && (!is_null && !another.is_null)) return false; \
         switch(datatype) { \
             case DataType::INT: return int_v op another.int_v; \
             case DataType::STRING: return string_v op another.string_v; \
@@ -32,11 +32,12 @@ class LiteralData {
 public:
     // Do not use union because we dont want to use std::string * str
     DataType datatype;
+    bool is_null = false;
 
     int64_t int_v;
     std::string string_v;
 
-    LiteralData() = default;
+    LiteralData(): is_null(true) {};
     LiteralData(const LiteralData & another) = default;
     LiteralData(int64_t v): datatype(DataType::INT), int_v(v) {}
     LiteralData(std::string v): datatype(DataType::STRING), string_v(v) {}
