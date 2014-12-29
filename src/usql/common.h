@@ -27,6 +27,8 @@ namespace usql {
 
 using rowid_t = int64_t;
 
+extern bool g_usql_log_enable;
+
 /*!
  * \brief printf-like std::string constructor
  */

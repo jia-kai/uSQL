@@ -13,8 +13,14 @@
 
 #include <unistd.h>
 
+bool usql::g_usql_log_enable = true;
+
 void usql::__usql_log__(const char *file, const char *func, int line,
 		const char *fmt, ...) {
+
+    if(!usql::g_usql_log_enable)
+        return;
+
 #define TIME_FMT	"[%s %s@%s:%d]"
 	static std::mutex mtx;
 
