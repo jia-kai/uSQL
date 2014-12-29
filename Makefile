@@ -19,6 +19,7 @@ override CXXFLAGS += \
 	-Wall -Wextra -Wnon-virtual-dtor -Wno-unused-parameter -Winvalid-pch \
 	-Wno-deprecated-register \
 	$(CPPFLAGS) $(OPTFLAG)
+override LDFLAGS += -lreadline
 override V ?= @
 
 CXXSOURCES = $(shell find -L src -name "*.$(SRC_EXT)")

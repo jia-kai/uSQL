@@ -2,12 +2,15 @@
 * @Author: BlahGeek
 * @Date:   2014-12-21
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2014-12-21
+* @Last Modified time: 2014-12-29
 */
 
 #include <iostream>
 #include "./usql/runner.h"
 #include "./usql/parser/sql_statement.h"
+
+#include <readline/readline.h>
+#include <readline/history.h>
 
 using namespace usql;
 
@@ -21,12 +24,16 @@ int main(int argc, char const *argv[]) {
     std::cout << welcome_msg << std::endl;
 
     auto runner = std::make_unique<Runner>(std::string(argv[1]));
-    while(std::cin.good()) {
-        std::string sql;
-        std::cout << "> ";
-        std::getline(std::cin, sql);
-        if(!std::cin.good())
-            break;
+
+    while(char * line_read = readline("> ")) {
+        add_history(line_read);
+        std::string sql(line_read);
+        free(line_read);
+
+        // remove trailing ';'
+        while(sql.back() == ';')
+            sql.pop_back();
+
         auto stmt = std::make_unique<SQLStatement>(sql);
         if(stmt->parse() != 0) {
             std::cerr << "Syntax error." << std::endl;
@@ -40,5 +47,6 @@ int main(int argc, char const *argv[]) {
             continue;
         }
     }
+
     return 0;
 }
