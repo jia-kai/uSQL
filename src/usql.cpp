@@ -110,7 +110,7 @@ int main(int argc, char * const argv[]) {
 
         try {
             runner->run(stmt);
-        } catch (SQLException & e) {
+        } catch (USQLError & e) {
             std::cerr << "Error: " << e.what() << std::endl;
             continue;
         }
