@@ -20,18 +20,52 @@
 
 using namespace usql;
 
+static void strip_whitespace(std::string & str) {
+    while(!str.empty()) {
+        auto c = str.back();
+        if(c == ' ' || c == '\r' || c == '\n' || c == '\t')
+            str.pop_back();
+        else break;
+    }
+}
+
+static void strip_back(std::string & str, const char c) {
+    while(!str.empty() && str.back() == c)
+        str.pop_back();
+}
+
+static std::string read_sql() {
+    std::string ret;
+    char * line_read = readline("> ");
+    if(line_read == nullptr) return ret;
+    ret += line_read;
+    free(line_read);
+    strip_whitespace(ret);
+    while(ret.back() != ';') {
+        char * line_read = readline("... ");
+        if(line_read == nullptr) break;
+        ret += " ";
+        ret += line_read;
+        free(line_read);
+        strip_whitespace(ret);
+    }
+    return ret;
+}
+
 static std::string help_msg = "Usage: ./usql [-v] [-d target.usql]";
 
 int main(int argc, char * const argv[]) {
 
     g_usql_log_enable = false;
     std::string db_dir = "usql.db";
+    bool debug_parse = false;
 
     char c;
-    while((c = getopt(argc, argv, "vhd:")) != -1) {
+    while((c = getopt(argc, argv, "vghd:")) != -1) {
         switch(c) {
             case 'v': g_usql_log_enable = true; break;
             case 'd': db_dir = optarg; break;
+            case 'g': debug_parse = true; break;
             case 'h': std::cerr << help_msg << std::endl; exit(1);
             default: std::cerr << "Unknown option." << std::endl << help_msg << std::endl; exit(1);
         }
@@ -46,16 +80,15 @@ int main(int argc, char * const argv[]) {
 
     auto runner = std::make_unique<Runner>(db_dir);
 
-    while(char * line_read = readline("> ")) {
-        add_history(line_read);
-        std::string sql(line_read);
-        free(line_read);
+    while(true) {
+        std::string sql = read_sql();
+        if(sql.size() == 0) break;
 
-        // remove trailing ';'
-        while(sql.back() == ';')
-            sql.pop_back();
+        add_history(sql.c_str());
+        strip_back(sql, ';');
 
         auto stmt = std::make_unique<SQLStatement>(sql);
+        stmt->setDebug(debug_parse);
         if(stmt->parse() != 0) {
             std::cerr << "Syntax error." << std::endl;
             continue;

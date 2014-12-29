@@ -24,7 +24,7 @@ using token = usql::SQLParser::token;
 
 %%
 
-[ \t\n]+            { }
+[ \t\r\n]+          { }
 
 (?i:"INT")          { return token::INT; }
 (?i:"VARCHAR")      { return token::VARCHAR; }
@@ -80,7 +80,7 @@ using token = usql::SQLParser::token;
                         yylval->intdata = atoi(yytext);
                         return token::INTEGER;
                     }
-[a-zA-Z0-9]+        {
+[a-zA-Z0-9_]+        {
                         yylval->stringdata = new std::string(yytext);
                         return token::IDENTIFIER;
                     }
