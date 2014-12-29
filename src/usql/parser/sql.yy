@@ -275,7 +275,7 @@ datatype            : INT {$$ = new usql::IntDataType(); }
 
 literal_data        : LITERAL_STRING { $$ = new usql::LiteralData(*($1)); }
                     | INTEGER        { $$ = new usql::LiteralData($1); }
-                    | NULL_          { $$ = new usql::LiteralData(); }
+                    | NULL_          { $$ = new usql::LiteralData(""); /* NULL is only for string... FIXME */}
                     ;
 
 literal_datas       : literal_data {
