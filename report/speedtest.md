@@ -19,7 +19,6 @@ Sqlite3在执行语句前运行`.timer ON`也能达到同样的效果。
 | INSERT (customer.sql)                                | 0.32s | **NOT WORKING** (8.15s)  | **0.039** |
 | INSERT (order.sql)                                   | 1.11s | **NOT WORKING** (25.31s) | **0.044** |
 | INSERT (publish.sql)                                 | 0.43s | **NOT WORKING** (5.67s)  | **0.076** |
-|------------------------------------------------------|-------|--------------------------|-----------|
 | SELECT * FROM publisher                              | 64ms  | 33ms                     | *1.94*    |
 | SELECT * FROM publisher WHERE id = 105000 (indexed)  | <1ms  | <1ms                     | **-**     |
 | SELECT * FROM book where title = '...' (not indexed) | 99ms  | 13ms                     | 7.62      |
