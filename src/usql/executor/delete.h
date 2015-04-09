@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
@@ -42,7 +42,7 @@ public:
             return true;
         }, true); // callback all last table
 
-        usql_log("%lu rows deleted", ret.size());
+        usql_log("%zd rows deleted", ret.size());
         return ret;
     }
 

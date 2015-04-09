@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-12-19
 * @Last Modified by:   BlahGeek
@@ -11,12 +11,12 @@
 
 using namespace usql;
 
-bool BaseExecutor::check_constraint(std::shared_ptr<TableInfo> tableinfo, 
+bool BaseExecutor::check_constraint(std::shared_ptr<TableInfo> tableinfo,
                                     size_t number, const LiteralData & val) {
     // check primary / unique
     auto & cons = tableinfo->constraints[number];
     auto & index = tableinfo->indexes[number];
-    if(cons.find(SQLStatement::ColumnConstraint::PRIMARY) != cons.end() || 
+    if(cons.find(SQLStatement::ColumnConstraint::PRIMARY) != cons.end() ||
        cons.find(SQLStatement::ColumnConstraint::UNIQUE) != cons.end()) {
         usql_assert(index, "Index must exists for Primary or Unique column");
         auto rows = index->find(IndexBase::BoundType::INCLUDE, val,
@@ -36,7 +36,7 @@ void BaseExecutor::setTargetColumns(std::vector<ColumnAndTableName> target_colum
         for(auto & col: tableinfo->table->columns) {
             auto it = std::find_if(target_columns.begin(), target_columns.end(),
                                    [&](const ColumnAndTableName & x) -> bool {
-                                     return x.first == tableinfo->name 
+                                     return x.first == tableinfo->name
                                         && x.second == col.first;
                                    });
             if(it == target_columns.end()) target_columns_index.back().push_back(-1);
@@ -45,7 +45,7 @@ void BaseExecutor::setTargetColumns(std::vector<ColumnAndTableName> target_colum
         #if 0
         usql_log("Target columns index for table %s:", tableinfo->name.c_str());
         for(size_t i = 0 ; i < target_columns_index.back().size() ; i += 1)
-            usql_log("\t%lu -> %d", i, target_columns_index.back()[i]);
+            usql_log("\t%zd -> %d", i, target_columns_index.back()[i]);
         #endif
     }
 }
@@ -68,7 +68,7 @@ void BaseExecutor::find(const std::unique_ptr<WhereStatement> & where,
     where->prepare(tableinfos);
     rows = where->filter(rows);
     for(size_t i = 0 ; i < rows.size() ; i += 1) {
-        usql_log("After filter: row count of `%s`: %lu", 
+        usql_log("After filter: row count of `%s`: %zd",
                  tableinfos[i]->name.c_str(), rows[i].size());
         if(rows[i].find(WhereStatement::INCLUDE_ALL) != rows[i].end())
             usql_log("\tINCLUDE ALL");
@@ -79,7 +79,7 @@ void BaseExecutor::find(const std::unique_ptr<WhereStatement> & where,
 }
 
 
-void BaseExecutor::recursive_find(size_t depth, 
+void BaseExecutor::recursive_find(size_t depth,
                                   std::vector<std::set<rowid_t>> & rows,
                                   const std::unique_ptr<WhereStatement> & where,
                                   BaseExecutor::callback_t callback,

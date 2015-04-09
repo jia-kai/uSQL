@@ -1,4 +1,4 @@
-/* 
+/*
 * @Author: BlahGeek
 * @Date:   2014-12-18
 * @Last Modified by:   BlahGeek
@@ -24,7 +24,7 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
     }
 
     if(target_columns.size() != vals.size()) {
-        usql_log("Size: %lu, %lu", target_columns.size(), vals.size());
+        usql_log("Size: %zd, %zd", target_columns.size(), vals.size());
         throw SQLException("Invalid size of values or column names");
     }
 
@@ -32,7 +32,7 @@ rowid_t InsertExecutor::insert(const std::vector<LiteralData> & vals) {
     for(size_t i = 0 ; i < target_index.size() ; i += 1) {
         if(target_index[i] == -1)
             full_vals.push_back(tableinfo->table->columns[i].second->make_default());
-        else 
+        else
             full_vals.push_back(vals[target_index[i]]);
 
         if(!this->check_constraint(tableinfo, i, full_vals.back()))

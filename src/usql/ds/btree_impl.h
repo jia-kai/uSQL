@@ -1,6 +1,6 @@
 /*
  * $File: btree_impl.h
- * $Date: Thu Nov 06 01:07:35 2014 +0800
+ * $Date: Thu Apr 09 09:33:01 2015 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -181,7 +181,7 @@ DEF(struct, LeafHeader) {
         auto sum = nr_item + rhs->nr_item;
         if (sum < tree->m_leaf_merge_thresh * 2)
             return false;
-        auto tgt = sum / 2; 
+        auto tgt = sum / 2;
         usql_assert(tgt <= tree->m_leaf_nr_data_slot);
         if (nr_item > rhs->nr_item) {
             // move to rhs
@@ -234,6 +234,10 @@ DEF(struct, LookupHistEntry) {
 
 /* ------------------------- methods ------------------ */
 
+DEF(constexpr size_t, internal_header_size)() {
+    return sizeof(InternalHeader);
+}
+
 DEF(, BTree) (PageIO &page_io, size_t payload_size, const KeyLess &cmpkey):
     PagedDataStructureBase(page_io),
     m_cmpkey(cmpkey),
@@ -245,8 +249,6 @@ DEF(, BTree) (PageIO &page_io, size_t payload_size, const KeyLess &cmpkey):
     m_leaf_merge_thresh(m_leaf_nr_data_slot / 3 + 1),
     m_internal_merge_thresh(m_internal_nr_child / 3 + 1)
 {
-    static_assert(sizeof(InternalHeader) == internal_header_size(),
-            "outdated internal_header_size()");
     static_assert(std::is_standard_layout<LeafHeader>::value &&
             std::is_standard_layout<InternalHeader>::value,
             "bad headers");

@@ -1,6 +1,6 @@
 /*
  * $File: file_io.cpp.linux
- * $Date: Mon Dec 22 01:12:40 2014 +0800
+ * $Date: Thu Apr 09 09:34:59 2015 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -63,7 +63,7 @@ FileIO::~FileIO() {
     sync_meta();
     {
         double k = m_meta.page_size / 1024.0 / 1024.0;
-        usql_log("close database: fd=%d nr_page=%lu size=%.3f/%.3fMiB", m_fd,
+        usql_log("close database: fd=%d nr_page=%zd size=%.3f/%.3fMiB", m_fd,
                     m_meta.nr_page,
                     m_meta.nr_page_allocated * k,
                     m_meta.nr_page * k);

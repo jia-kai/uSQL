@@ -1,6 +1,6 @@
 /*
  * $File: btree.h
- * $Date: Thu Nov 06 00:34:01 2014 +0800
+ * $Date: Thu Apr 09 09:32:01 2015 +0800
  * $Author: jiakai <jia.kai66@gmail.com>
  */
 
@@ -30,15 +30,13 @@ class BTree: public PagedDataStructureBase {
          * visit the payload of given key; insert on missing
          */
         void *visit(const Key &key);
-        
+
         /*!
          * return whether the key exists
          */
         bool erase(const Key &key);
 
-        static constexpr size_t internal_header_size() {
-            return 16;
-        }
+        static inline constexpr size_t internal_header_size();
 
         void sanity_check() const;
 
@@ -124,7 +122,7 @@ class TypedBTree: public BTree<Key, KeyLess> {
         TypedBTree(PageIO &page_io, const KeyLess &cmpkey = KeyLess()):
             BTree<Key, KeyLess>(page_io, sizeof(Payload), cmpkey)
         {}
-        
+
         class Iterator: public BaseIter {
             Iterator(const BaseIter &iter):
                 BaseIter(iter)
